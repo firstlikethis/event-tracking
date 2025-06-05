@@ -1,7 +1,7 @@
 package th.or.studentloan.event.service;
 
-import th.or.studentloan.event.dao.VisitorDao;
 import th.or.studentloan.event.dao.OtpDao;
+import th.or.studentloan.event.dao.VisitorDao;
 import th.or.studentloan.event.model.Visitor;
 
 public class VisitorServiceImpl implements VisitorService {

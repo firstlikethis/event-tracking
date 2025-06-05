@@ -2,10 +2,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/mvc
-        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
 
     <!-- MVC Configuration -->
     <mvc:annotation-driven/>
@@ -25,10 +28,12 @@
     <bean id="visitorController" class="th.or.studentloan.event.controller.VisitorController">
         <property name="visitorService" ref="visitorService"/>
         <property name="otpService" ref="otpService"/>
+        <property name="boothService" ref="boothService"/>
     </bean>
     
     <bean id="boothController" class="th.or.studentloan.event.controller.BoothController">
         <property name="boothService" ref="boothService"/>
+        <property name="visitorService" ref="visitorService"/>
     </bean>
     
     <bean id="rewardController" class="th.or.studentloan.event.controller.RewardController">
@@ -54,14 +59,31 @@
                 <prop key="/login">visitorController</prop>
                 <prop key="/verify-otp">visitorController</prop>
                 <prop key="/dashboard">visitorController</prop>
+                <prop key="/logout">visitorController</prop>
                 <prop key="/scan-qr">boothController</prop>
+                <prop key="/scan-result">boothController</prop>
                 <prop key="/rewards">rewardController</prop>
                 <prop key="/claim-reward">rewardController</prop>
+                <prop key="/my-rewards">rewardController</prop>
                 <prop key="/admin">adminController</prop>
+                <prop key="/admin/logout">adminController</prop>
+                <prop key="/admin/dashboard">adminController</prop>
                 <prop key="/admin/booths">adminController</prop>
+                <prop key="/admin/booth-form">adminController</prop>
+                <prop key="/admin/save-booth">adminController</prop>
+                <prop key="/admin/delete-booth">adminController</prop>
                 <prop key="/admin/rewards">adminController</prop>
+                <prop key="/admin/reward-form">adminController</prop>
+                <prop key="/admin/save-reward">adminController</prop>
+                <prop key="/admin/delete-reward">adminController</prop>
+                <prop key="/admin/claims">adminController</prop>
+                <prop key="/admin/mark-received">adminController</prop>
                 <prop key="/admin/users">adminController</prop>
+                <prop key="/admin/admin-form">adminController</prop>
+                <prop key="/admin/save-admin">adminController</prop>
+                <prop key="/admin/delete-admin">adminController</prop>
                 <prop key="/lucky-draw">luckyDrawController</prop>
+                <prop key="/lucky-draw-result">luckyDrawController</prop>
             </props>
         </property>
     </bean>
