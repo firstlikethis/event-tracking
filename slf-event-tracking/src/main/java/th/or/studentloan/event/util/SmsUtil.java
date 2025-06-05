@@ -1,16 +1,15 @@
 package th.or.studentloan.event.util;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLEncoder;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import javax.net.ssl.HttpsURLConnection;
 
 public class SmsUtil {
+    
     private String smsUrl;
     private String publicKey;
     private String source;
@@ -28,29 +27,53 @@ public class SmsUtil {
     }
     
     public boolean sendSMS(String phoneNumber, String message) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(smsUrl);
+        try {
+            // Create connection
+            URL apiUrl = new URL(smsUrl);
+            HttpsURLConnection conn = (HttpsURLConnection) apiUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setDoOutput(true);
             
-            // Prepare JSON payload
-            String json = String.format(
-                "{\"public_key\":\"%s\",\"source\":\"%s\",\"destination\":\"%s\",\"message\":\"%s\"}",
-                publicKey, source, phoneNumber, message
-            );
+            // Prepare and send request body - สำคัญ: ใช้ text แทน message
+            String postData = String.format("public_key=%s&text=%s&destination=%s&source=%s",
+                    URLEncoder.encode(publicKey, "UTF-8"),
+                    URLEncoder.encode(message, "UTF-8"),
+                    URLEncoder.encode(phoneNumber, "UTF-8"),
+                    URLEncoder.encode(source, "UTF-8"));
             
-            StringEntity entity = new StringEntity(json, StandardCharsets.UTF_8);
-            httpPost.setEntity(entity);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setHeader("Accept", "application/json");
-            
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                String responseBody = EntityUtils.toString(response.getEntity());
-                int statusCode = response.getStatusLine().getStatusCode();
-                
-                return statusCode >= 200 && statusCode < 300;
+            // ส่งข้อมูล
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = postData.getBytes("UTF-8");
+                os.write(input, 0, input.length);
             }
-        } catch (IOException e) {
+            
+            // รับการตอบกลับ
+            int responseCode = conn.getResponseCode();
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+            }
+            
+            return responseCode == 200 || responseCode == 201;
+            
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+    }
+    
+    // ฟังก์ชันช่วย: แปลงเบอร์โทรศัพท์ให้อยู่ในรูปแบบมาตรฐาน
+    private String formatPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null) {
+            return null;
+        }
+        
+        // ลบอักขระที่ไม่ใช่ตัวเลข
+        return phoneNumber.replaceAll("[^0-9]", "");
     }
 }
