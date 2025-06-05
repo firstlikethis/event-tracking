@@ -35,7 +35,6 @@ public class QrCodeUtil implements ServletContextAware {
                 uploadDirFile.mkdirs();
             }
             
-            // ส่วนที่เหลือยังคงเหมือนเดิม...
             Map<EncodeHintType, Object> hints = new HashMap<>();
             hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");

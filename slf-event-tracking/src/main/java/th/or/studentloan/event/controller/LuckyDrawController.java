@@ -1,6 +1,7 @@
 package th.or.studentloan.event.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,7 +40,7 @@ public class LuckyDrawController extends AbstractController {
         // ดึงรายการรางวัลที่สามารถสุ่มได้ (ประเภท 1)
         List<Reward> luckyDrawRewards = rewardService.getAllActiveRewards().stream()
                 .filter(reward -> "1".equals(reward.getRewardType()) && reward.getRemaining() > 0)
-                .toList();
+                .collect(Collectors.toList()); // แก้ไขจาก .toList() เป็น .collect(Collectors.toList())
         
         ModelAndView mv = new ModelAndView("lucky-draw");
         mv.addObject("rewards", luckyDrawRewards);

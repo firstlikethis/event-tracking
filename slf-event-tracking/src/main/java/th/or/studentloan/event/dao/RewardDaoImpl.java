@@ -3,6 +3,7 @@ package th.or.studentloan.event.dao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -103,7 +104,7 @@ public class RewardDaoImpl implements RewardDao {
     public List<Reward> findAvailableForLuckyDraw(String visitorType) {
         // ประเภทผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล: 1,2,3,4
         if (visitorType.equals("5") || visitorType.equals("6")) {
-            return List.of();  // ไม่มีสิทธิ์ลุ้นรางวัล
+            return Collections.emptyList();  // แก้ไขจาก List.of() เป็น Collections.emptyList()
         }
         
         String sql = "SELECT * FROM slf_deb3.tb_reward WHERE is_active = '1' AND reward_type = '1' " +
