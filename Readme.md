@@ -33,6 +33,15 @@ slf-event-tracking/
 └── pom.xml
 
 
+DROP TABLE slf_deb3.tb_visitor;
+DROP TABLE slf_deb3.tb_otp;
+DROP TABLE slf_deb3.tb_booth;
+DROP TABLE slf_deb3.tb_visitor_log;
+DROP TABLE slf_deb3.tb_reward;
+DROP TABLE slf_deb3.tb_reward_claim;
+DROP TABLE slf_deb3.tb_admin;
+
+
 -- ผู้เข้าร่วมงาน
 CREATE TABLE slf_deb3.tb_visitor (
     visitor_id NUMBER PRIMARY KEY,
@@ -118,6 +127,56 @@ CREATE TABLE slf_deb3.tb_admin (
     last_login_date TIMESTAMP,
     is_active CHAR(1) DEFAULT '1' -- 0=ไม่ใช้งาน, 1=ใช้งาน
 );
+
+
+-- Create sequences
+CREATE SEQUENCE slf_deb3.tb_visitor_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE SEQUENCE slf_deb3.tb_otp_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE SEQUENCE slf_deb3.tb_booth_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE SEQUENCE slf_deb3.tb_visitor_log_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE SEQUENCE slf_deb3.tb_reward_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE SEQUENCE slf_deb3.tb_reward_claim_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE SEQUENCE slf_deb3.tb_admin_seq
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+-- admin user (username: admin, password: admin123)
+INSERT INTO slf_deb3.tb_admin (admin_id, username, password, fullname, role, created_date, is_active)
+VALUES (slf_deb3.tb_admin_seq.NEXTVAL, 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'ผู้ดูแลระบบ', 'ADMIN', SYSTIMESTAMP, '1');
+
+COMMIT;
 
 
 ## สรุปความคืบหน้า
