@@ -1,8 +1,8 @@
 package th.or.studentloan.event.service;
 
-import th.or.studentloan.event.model.Admin;
-
 import java.util.List;
+
+import th.or.studentloan.event.model.Admin;
 
 public interface AdminService {
     Admin login(String username, String password);

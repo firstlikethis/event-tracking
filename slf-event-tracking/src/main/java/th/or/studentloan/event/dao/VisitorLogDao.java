@@ -1,8 +1,8 @@
 package th.or.studentloan.event.dao;
 
-import th.or.studentloan.event.model.VisitorLog;
-
 import java.util.List;
+
+import th.or.studentloan.event.model.VisitorLog;
 
 public interface VisitorLogDao {
     List<VisitorLog> findByVisitorId(Long visitorId);

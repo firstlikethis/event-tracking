@@ -1,10 +1,10 @@
 package th.or.studentloan.event.service;
 
+import java.util.List;
+
 import th.or.studentloan.event.model.Reward;
 import th.or.studentloan.event.model.RewardClaim;
 import th.or.studentloan.event.model.Visitor;
-
-import java.util.List;
 
 public interface RewardService {
     List<Reward> getAllRewards();

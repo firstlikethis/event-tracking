@@ -1,8 +1,8 @@
 package th.or.studentloan.event.dao;
 
-import th.or.studentloan.event.model.Booth;
-
 import java.util.List;
+
+import th.or.studentloan.event.model.Booth;
 
 public interface BoothDao {
     List<Booth> findAllActive();

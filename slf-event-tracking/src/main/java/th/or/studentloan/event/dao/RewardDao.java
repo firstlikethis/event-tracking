@@ -1,8 +1,8 @@
 package th.or.studentloan.event.dao;
 
-import th.or.studentloan.event.model.Reward;
-
 import java.util.List;
+
+import th.or.studentloan.event.model.Reward;
 
 public interface RewardDao {
     List<Reward> findAll();

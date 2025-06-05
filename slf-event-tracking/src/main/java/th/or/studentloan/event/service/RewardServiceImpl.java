@@ -1,15 +1,15 @@
 package th.or.studentloan.event.service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
 import th.or.studentloan.event.dao.RewardClaimDao;
 import th.or.studentloan.event.dao.RewardDao;
 import th.or.studentloan.event.dao.VisitorDao;
 import th.or.studentloan.event.model.Reward;
 import th.or.studentloan.event.model.RewardClaim;
 import th.or.studentloan.event.model.Visitor;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 
 public class RewardServiceImpl implements RewardService {
     private RewardDao rewardDao;

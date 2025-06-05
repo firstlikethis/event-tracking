@@ -3,6 +3,7 @@ package th.or.studentloan.event.config;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
+
 import org.springframework.beans.factory.FactoryBean;
 
 public class JndiLookupBean implements FactoryBean<DataSource> {

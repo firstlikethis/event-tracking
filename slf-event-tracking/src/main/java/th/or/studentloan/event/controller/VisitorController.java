@@ -1,19 +1,20 @@
 package th.or.studentloan.event.controller;
 
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
-import org.springframework.web.servlet.view.RedirectView;
+
 import th.or.studentloan.event.model.OTP;
 import th.or.studentloan.event.model.Visitor;
 import th.or.studentloan.event.model.VisitorLog;
 import th.or.studentloan.event.service.BoothService;
 import th.or.studentloan.event.service.OtpService;
 import th.or.studentloan.event.service.VisitorService;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.util.List;
 
 public class VisitorController extends AbstractController {
     private VisitorService visitorService;

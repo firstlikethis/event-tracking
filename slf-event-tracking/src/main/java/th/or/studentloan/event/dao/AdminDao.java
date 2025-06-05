@@ -1,8 +1,8 @@
 package th.or.studentloan.event.dao;
 
-import th.or.studentloan.event.model.Admin;
-
 import java.util.List;
+
+import th.or.studentloan.event.model.Admin;
 
 public interface AdminDao {
     Admin findByUsername(String username);

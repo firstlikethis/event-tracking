@@ -1,9 +1,9 @@
 package th.or.studentloan.event.service;
 
+import java.util.List;
+
 import th.or.studentloan.event.model.Booth;
 import th.or.studentloan.event.model.VisitorLog;
-
-import java.util.List;
 
 public interface BoothService {
     List<Booth> getAllActiveBooths();
