@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- MVC Configuration -->
+    <mvc:annotation-driven/>
+    <mvc:resources mapping="/resources/**" location="/resources/"/>
+
+    <!-- View Resolver -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!-- Controllers -->
+    <bean id="homeController" class="th.or.studentloan.event.controller.HomeController">
+        <property name="visitorService" ref="visitorService"/>
+    </bean>
+    
+    <bean id="visitorController" class="th.or.studentloan.event.controller.VisitorController">
+        <property name="visitorService" ref="visitorService"/>
+        <property name="otpService" ref="otpService"/>
+    </bean>
+    
+    <bean id="boothController" class="th.or.studentloan.event.controller.BoothController">
+        <property name="boothService" ref="boothService"/>
+    </bean>
+    
+    <bean id="rewardController" class="th.or.studentloan.event.controller.RewardController">
+        <property name="rewardService" ref="rewardService"/>
+    </bean>
+    
+    <bean id="adminController" class="th.or.studentloan.event.controller.AdminController">
+        <property name="adminService" ref="adminService"/>
+        <property name="boothService" ref="boothService"/>
+        <property name="rewardService" ref="rewardService"/>
+    </bean>
+    
+    <bean id="luckyDrawController" class="th.or.studentloan.event.controller.LuckyDrawController">
+        <property name="rewardService" ref="rewardService"/>
+    </bean>
+
+    <!-- URL Mappings -->
+    <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+                <prop key="/">homeController</prop>
+                <prop key="/register">visitorController</prop>
+                <prop key="/login">visitorController</prop>
+                <prop key="/verify-otp">visitorController</prop>
+                <prop key="/dashboard">visitorController</prop>
+                <prop key="/scan-qr">boothController</prop>
+                <prop key="/rewards">rewardController</prop>
+                <prop key="/claim-reward">rewardController</prop>
+                <prop key="/admin">adminController</prop>
+                <prop key="/admin/booths">adminController</prop>
+                <prop key="/admin/rewards">adminController</prop>
+                <prop key="/admin/users">adminController</prop>
+                <prop key="/lucky-draw">luckyDrawController</prop>
+            </props>
+        </property>
+    </bean>
+</beans>

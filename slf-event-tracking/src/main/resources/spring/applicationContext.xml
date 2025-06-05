@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/jdbc
+        http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+    <!-- JNDI DataSource -->
+    <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <property name="jndiName" value="java:/comp/env/jdbc/SLFORA19"/>
+        <property name="resourceRef" value="true"/>
+    </bean>
+
+    <!-- JDBC Template -->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- Transaction Manager -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- DAO Beans -->
+    <bean id="visitorDao" class="th.or.studentloan.event.dao.VisitorDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+    
+    <bean id="otpDao" class="th.or.studentloan.event.dao.OtpDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+    
+    <bean id="boothDao" class="th.or.studentloan.event.dao.BoothDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+    
+    <bean id="visitorLogDao" class="th.or.studentloan.event.dao.VisitorLogDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+    
+    <bean id="rewardDao" class="th.or.studentloan.event.dao.RewardDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+    
+    <bean id="rewardClaimDao" class="th.or.studentloan.event.dao.RewardClaimDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+    
+    <bean id="adminDao" class="th.or.studentloan.event.dao.AdminDaoImpl">
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+
+    <!-- Service Beans -->
+    <bean id="visitorService" class="th.or.studentloan.event.service.VisitorServiceImpl">
+        <property name="visitorDao" ref="visitorDao"/>
+        <property name="otpDao" ref="otpDao"/>
+    </bean>
+    
+    <bean id="otpService" class="th.or.studentloan.event.service.OtpServiceImpl">
+        <property name="otpDao" ref="otpDao"/>
+    </bean>
+    
+    <bean id="boothService" class="th.or.studentloan.event.service.BoothServiceImpl">
+        <property name="boothDao" ref="boothDao"/>
+        <property name="visitorLogDao" ref="visitorLogDao"/>
+        <property name="visitorDao" ref="visitorDao"/>
+    </bean>
+    
+    <bean id="rewardService" class="th.or.studentloan.event.service.RewardServiceImpl">
+        <property name="rewardDao" ref="rewardDao"/>
+        <property name="rewardClaimDao" ref="rewardClaimDao"/>
+        <property name="visitorDao" ref="visitorDao"/>
+    </bean>
+    
+    <bean id="adminService" class="th.or.studentloan.event.service.AdminServiceImpl">
+        <property name="adminDao" ref="adminDao"/>
+    </bean>
+
+    <!-- Utility Beans -->
+    <bean id="qrCodeUtil" class="th.or.studentloan.event.util.QrCodeUtil"/>
+    
+    <bean id="smsUtil" class="th.or.studentloan.event.util.SmsUtil">
+        <property name="smsUrl" value="https://slfsms-gw.studentloan.or.th/_SMSGateway/smsgateway/delivery"/>
+        <property name="publicKey" value="sjIpIl3mi9z8m44nB2iZphlY"/>
+        <property name="source" value="STUDENTLOAN"/>
+    </bean>
+</beans>
