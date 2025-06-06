@@ -64,22 +64,27 @@ public class RewardClaimDaoImpl implements RewardClaimDao {
     
     @Override
     public Long save(RewardClaim rewardClaim) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(claim_id), 0) + 1 FROM slf_deb3.tb_reward_claim";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_reward_claim (claim_id, visitor_id, reward_id, " +
                 "points_used, is_lucky_draw, is_received) " +
-                "VALUES (slf_deb3.tb_reward_claim_seq.NEXTVAL, ?, ?, ?, ?, '0')";
+                "VALUES (?, ?, ?, ?, ?, '0')";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"claim_id"});
-            ps.setLong(1, rewardClaim.getVisitorId());
-            ps.setLong(2, rewardClaim.getRewardId());
-            ps.setInt(3, rewardClaim.getPointsUsed());
-            ps.setString(4, rewardClaim.getIsLuckyDraw());
+            ps.setLong(1, nextId);
+            ps.setLong(2, rewardClaim.getVisitorId());
+            ps.setLong(3, rewardClaim.getRewardId());
+            ps.setInt(4, rewardClaim.getPointsUsed());
+            ps.setString(5, rewardClaim.getIsLuckyDraw());
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     @Override

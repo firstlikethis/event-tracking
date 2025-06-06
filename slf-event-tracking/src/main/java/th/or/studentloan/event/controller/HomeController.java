@@ -17,6 +17,6 @@ public class HomeController extends AbstractController {
     
     @Override
     protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        return new ModelAndView("home");
+        return new ModelAndView("views/home");
     }
 }

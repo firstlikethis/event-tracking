@@ -62,12 +62,12 @@ public class BoothController extends AbstractController {
                     visitor = visitorService.findVisitorByPhoneNumber(visitor.getPhoneNumber());
                     session.setAttribute("visitor", visitor);
                     
-                    ModelAndView mv = new ModelAndView("scan-result");
+                    ModelAndView mv = new ModelAndView("views/scan-result");
                     mv.addObject("success", true);
                     mv.addObject("booth", booth);
                     return mv;
                 } else {
-                    ModelAndView mv = new ModelAndView("scan-result");
+                    ModelAndView mv = new ModelAndView("views/scan-result");
                     mv.addObject("success", false);
                     mv.addObject("message", "คุณเคยสแกนบูธนี้แล้ว หรือบูธไม่ถูกต้อง");
                     return mv;
@@ -75,7 +75,7 @@ public class BoothController extends AbstractController {
             }
         }
         
-        return new ModelAndView("scan-qr");
+        return new ModelAndView("views/scan-qr");
     }
     
     private ModelAndView handleScanResult(HttpServletRequest request) {
@@ -86,6 +86,6 @@ public class BoothController extends AbstractController {
             return new ModelAndView("redirect:/");
         }
         
-        return new ModelAndView("scan-result");
+        return new ModelAndView("views/scan-result");
     }
 }

@@ -40,6 +40,8 @@ public class AdminController extends AbstractController {
         String contextPath = request.getContextPath();
         String path = uri.substring(contextPath.length());
         
+        System.out.println("Admin Controller Path: " + path);
+        
         // Admin Login
         if (path.equals("/admin")) {
             return handleAdminLogin(request);
@@ -114,6 +116,8 @@ public class AdminController extends AbstractController {
         if ("POST".equalsIgnoreCase(request.getMethod())) {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
+            
+            System.out.println("Login attempt: " + username);
             
             Admin admin = adminService.login(username, password);
             

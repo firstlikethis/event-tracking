@@ -41,22 +41,27 @@ public class AdminDaoImpl implements AdminDao {
     
     @Override
     public Long save(Admin admin) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(admin_id), 0) + 1 FROM slf_deb3.tb_admin";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_admin (admin_id, username, password, fullname, role, is_active) " +
-                "VALUES (slf_deb3.tb_admin_seq.NEXTVAL, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?)";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"admin_id"});
-            ps.setString(1, admin.getUsername());
-            ps.setString(2, admin.getPassword());
-            ps.setString(3, admin.getFullname());
-            ps.setString(4, admin.getRole());
-            ps.setString(5, admin.getIsActive());
+            ps.setLong(1, nextId);
+            ps.setString(2, admin.getUsername());
+            ps.setString(3, admin.getPassword());
+            ps.setString(4, admin.getFullname());
+            ps.setString(5, admin.getRole());
+            ps.setString(6, admin.getIsActive());
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     @Override

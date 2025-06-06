@@ -52,7 +52,7 @@ public class RewardController extends AbstractController {
         // รายการรางวัลสำหรับลุ้น
         List<Reward> luckyDrawRewards = rewardService.getAvailableRewardsForLuckyDraw(visitor.getVisitorType());
         
-        ModelAndView mv = new ModelAndView("rewards");
+        ModelAndView mv = new ModelAndView("views/rewards");
         mv.addObject("visitor", visitor);
         mv.addObject("exchangeRewards", exchangeRewards);
         mv.addObject("luckyDrawRewards", luckyDrawRewards);
@@ -83,13 +83,13 @@ public class RewardController extends AbstractController {
                     // ดึงข้อมูลรางวัล
                     Reward reward = rewardService.getRewardById(rewardId);
                     
-                    ModelAndView mv = new ModelAndView("claim-result");
+                    ModelAndView mv = new ModelAndView("views/claim-result");
                     mv.addObject("success", true);
                     mv.addObject("reward", reward);
                     mv.addObject("isLuckyDraw", isLuckyDraw);
                     return mv;
                 } else {
-                    ModelAndView mv = new ModelAndView("claim-result");
+                    ModelAndView mv = new ModelAndView("views/claim-result");
                     mv.addObject("success", false);
                     mv.addObject("message", "ไม่สามารถแลกรางวัลได้ คะแนนไม่เพียงพอหรือรางวัลหมด");
                     return mv;
@@ -111,7 +111,7 @@ public class RewardController extends AbstractController {
         // ประวัติการแลกรางวัล
         List<RewardClaim> myClaims = rewardService.getVisitorClaims(visitor.getVisitorId());
         
-        ModelAndView mv = new ModelAndView("my-rewards");
+        ModelAndView mv = new ModelAndView("views/my-rewards");
         mv.addObject("visitor", visitor);
         mv.addObject("myClaims", myClaims);
         

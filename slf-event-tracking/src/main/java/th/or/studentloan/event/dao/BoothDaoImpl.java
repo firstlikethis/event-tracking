@@ -34,22 +34,27 @@ public class BoothDaoImpl implements BoothDao {
     
     @Override
     public Long save(Booth booth) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(booth_id), 0) + 1 FROM slf_deb3.tb_booth";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_booth (booth_id, booth_name, booth_description, points, qr_code_url, is_active) " +
-                "VALUES (slf_deb3.tb_booth_seq.NEXTVAL, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?)";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"booth_id"});
-            ps.setString(1, booth.getBoothName());
-            ps.setString(2, booth.getBoothDescription());
-            ps.setInt(3, booth.getPoints());
-            ps.setString(4, booth.getQrCodeUrl());
-            ps.setString(5, booth.getIsActive());
+            ps.setLong(1, nextId);
+            ps.setString(2, booth.getBoothName());
+            ps.setString(3, booth.getBoothDescription());
+            ps.setInt(4, booth.getPoints());
+            ps.setString(5, booth.getQrCodeUrl());
+            ps.setString(6, booth.getIsActive());
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     @Override

@@ -37,20 +37,25 @@ public class VisitorLogDaoImpl implements VisitorLogDao {
     
     @Override
     public Long save(VisitorLog visitorLog) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(log_id), 0) + 1 FROM slf_deb3.tb_visitor_log";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_visitor_log (log_id, visitor_id, booth_id, points_earned) " +
-                "VALUES (slf_deb3.tb_visitor_log_seq.NEXTVAL, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?)";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"log_id"});
-            ps.setLong(1, visitorLog.getVisitorId());
-            ps.setLong(2, visitorLog.getBoothId());
-            ps.setInt(3, visitorLog.getPointsEarned());
+            ps.setLong(1, nextId);
+            ps.setLong(2, visitorLog.getVisitorId());
+            ps.setLong(3, visitorLog.getBoothId());
+            ps.setInt(4, visitorLog.getPointsEarned());
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     private static class VisitorLogRowMapper implements RowMapper<VisitorLog> {

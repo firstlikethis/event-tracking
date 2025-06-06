@@ -66,14 +66,14 @@ public class VisitorController extends AbstractController {
                 phoneNumber == null || phoneNumber.trim().isEmpty() ||
                 visitorType == null || visitorType.trim().isEmpty()) {
                 
-                ModelAndView mv = new ModelAndView("register");
+                ModelAndView mv = new ModelAndView("views/register");
                 mv.addObject("error", "กรุณากรอกข้อมูลให้ครบถ้วน");
                 return mv;
             }
             
             // Check if phone number is already registered
             if (visitorService.isPhoneNumberRegistered(phoneNumber)) {
-                ModelAndView mv = new ModelAndView("register");
+                ModelAndView mv = new ModelAndView("views/register");
                 mv.addObject("error", "เบอร์โทรศัพท์นี้ลงทะเบียนแล้ว กรุณาเข้าสู่ระบบ");
                 return mv;
             }
@@ -96,10 +96,10 @@ public class VisitorController extends AbstractController {
             HttpSession session = request.getSession();
             session.setAttribute("registerPhoneNumber", phoneNumber);
             
-            return new ModelAndView("verify-otp");
+            return new ModelAndView("views/verify-otp");
         }
         
-        return new ModelAndView("register");
+        return new ModelAndView("views/register");
     }
     
     private ModelAndView handleLogin(HttpServletRequest request) {
@@ -108,14 +108,14 @@ public class VisitorController extends AbstractController {
             
             // Validate input
             if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
-                ModelAndView mv = new ModelAndView("login");
+                ModelAndView mv = new ModelAndView("views/login");
                 mv.addObject("error", "กรุณากรอกเบอร์โทรศัพท์");
                 return mv;
             }
             
             // Check if phone number exists
             if (!visitorService.isPhoneNumberRegistered(phoneNumber)) {
-                ModelAndView mv = new ModelAndView("login");
+                ModelAndView mv = new ModelAndView("views/login");
                 mv.addObject("error", "ไม่พบเบอร์โทรศัพท์นี้ในระบบ กรุณาลงทะเบียนก่อน");
                 return mv;
             }
@@ -127,10 +127,10 @@ public class VisitorController extends AbstractController {
             HttpSession session = request.getSession();
             session.setAttribute("loginPhoneNumber", phoneNumber);
             
-            return new ModelAndView("verify-otp");
+            return new ModelAndView("views/verify-otp");
         }
         
-        return new ModelAndView("login");
+        return new ModelAndView("views/login");
     }
     
     private ModelAndView handleVerifyOtp(HttpServletRequest request) {
@@ -139,7 +139,7 @@ public class VisitorController extends AbstractController {
             
             // Validate input
             if (otpCode == null || otpCode.trim().isEmpty()) {
-                ModelAndView mv = new ModelAndView("verify-otp");
+                ModelAndView mv = new ModelAndView("views/verify-otp");
                 mv.addObject("error", "กรุณากรอกรหัส OTP");
                 return mv;
             }
@@ -153,7 +153,7 @@ public class VisitorController extends AbstractController {
             boolean isValid = otpService.verifyOTP(phoneNumber, otpCode);
             
             if (!isValid) {
-                ModelAndView mv = new ModelAndView("verify-otp");
+                ModelAndView mv = new ModelAndView("views/verify-otp");
                 mv.addObject("error", "รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
                 return mv;
             }
@@ -176,7 +176,7 @@ public class VisitorController extends AbstractController {
             return new ModelAndView("redirect:/dashboard");
         }
         
-        return new ModelAndView("verify-otp");
+        return new ModelAndView("views/verify-otp");
     }
     
     private ModelAndView handleDashboard(HttpServletRequest request) {
@@ -194,7 +194,7 @@ public class VisitorController extends AbstractController {
         // Get visitor activity logs
         List<VisitorLog> activityLogs = boothService.getVisitorLogs(visitor.getVisitorId());
         
-        ModelAndView mv = new ModelAndView("dashboard");
+        ModelAndView mv = new ModelAndView("views/dashboard");
         mv.addObject("visitor", visitor);
         mv.addObject("activityLogs", activityLogs);
         

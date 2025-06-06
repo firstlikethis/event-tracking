@@ -42,7 +42,7 @@ public class LuckyDrawController extends AbstractController {
                 .filter(reward -> "1".equals(reward.getRewardType()) && reward.getRemaining() > 0)
                 .collect(Collectors.toList()); // แก้ไขจาก .toList() เป็น .collect(Collectors.toList())
         
-        ModelAndView mv = new ModelAndView("lucky-draw");
+        ModelAndView mv = new ModelAndView("views/lucky-draw");
         mv.addObject("rewards", luckyDrawRewards);
         
         // ถ้ามีการเลือกรางวัลแล้ว
@@ -80,7 +80,7 @@ public class LuckyDrawController extends AbstractController {
         
         // ถ้าไม่มีผู้มีสิทธิ์ลุ้นรางวัล
         if (winner == null) {
-            ModelAndView mv = new ModelAndView("lucky-draw-result");
+            ModelAndView mv = new ModelAndView("views/lucky-draw-result");
             mv.addObject("reward", reward);
             mv.addObject("noEligibleParticipants", true);
             return mv;
@@ -89,7 +89,7 @@ public class LuckyDrawController extends AbstractController {
         // บันทึกการแลกรางวัล
         boolean success = rewardService.claimReward(winner.getVisitorId(), rewardId, true);
         
-        ModelAndView mv = new ModelAndView("lucky-draw-result");
+        ModelAndView mv = new ModelAndView("views/lucky-draw-result");
         mv.addObject("reward", reward);
         mv.addObject("winner", winner);
         mv.addObject("success", success);

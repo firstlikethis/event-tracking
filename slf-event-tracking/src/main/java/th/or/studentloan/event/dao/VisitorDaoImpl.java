@@ -35,22 +35,27 @@ public class VisitorDaoImpl implements VisitorDao {
     
     @Override
     public Long save(Visitor visitor) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(visitor_id), 0) + 1 FROM slf_deb3.tb_visitor";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_visitor (visitor_id, fullname, phone_number, email, visitor_type, total_points) " +
-                "VALUES (slf_deb3.tb_visitor_seq.NEXTVAL, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?)";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"visitor_id"});
-            ps.setString(1, visitor.getFullname());
-            ps.setString(2, visitor.getPhoneNumber());
-            ps.setString(3, visitor.getEmail());
-            ps.setString(4, visitor.getVisitorType());
-            ps.setInt(5, visitor.getTotalPoints() != null ? visitor.getTotalPoints() : 0);
+            ps.setLong(1, nextId);
+            ps.setString(2, visitor.getFullname());
+            ps.setString(3, visitor.getPhoneNumber());
+            ps.setString(4, visitor.getEmail());
+            ps.setString(5, visitor.getVisitorType());
+            ps.setInt(6, visitor.getTotalPoints() != null ? visitor.getTotalPoints() : 0);
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     @Override

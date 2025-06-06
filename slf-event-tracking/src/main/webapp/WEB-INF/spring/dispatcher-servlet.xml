@@ -15,8 +15,9 @@
     <mvc:resources mapping="/resources/**" location="/resources/"/>
 
     <!-- View Resolver -->
-    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-        <property name="prefix" value="/WEB-INF/views/"/>
+    <!-- แก้ไขเพื่อให้สามารถเข้าถึงทั้ง views และ admin folder ได้ -->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/"/>
         <property name="suffix" value=".jsp"/>
     </bean>
 

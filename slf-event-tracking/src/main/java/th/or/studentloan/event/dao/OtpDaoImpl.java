@@ -31,20 +31,25 @@ public class OtpDaoImpl implements OtpDao {
     
     @Override
     public Long save(OTP otp) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(otp_id), 0) + 1 FROM slf_deb3.tb_otp";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_otp (otp_id, phone_number, otp_code, expired_date, is_used) " +
-                "VALUES (slf_deb3.tb_otp_seq.NEXTVAL, ?, ?, ?, '0')";
+                "VALUES (?, ?, ?, ?, '0')";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"otp_id"});
-            ps.setString(1, otp.getPhoneNumber());
-            ps.setString(2, otp.getOtpCode());
-            ps.setTimestamp(3, new Timestamp(otp.getExpiredDate().getTime()));
+            ps.setLong(1, nextId);
+            ps.setString(2, otp.getPhoneNumber());
+            ps.setString(3, otp.getOtpCode());
+            ps.setTimestamp(4, new Timestamp(otp.getExpiredDate().getTime()));
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     @Override

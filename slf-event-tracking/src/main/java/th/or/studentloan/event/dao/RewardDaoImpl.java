@@ -41,25 +41,30 @@ public class RewardDaoImpl implements RewardDao {
     
     @Override
     public Long save(Reward reward) {
+        // ไม่ใช้ Sequence แต่หา MAX และ +1
+        String getMaxIdSql = "SELECT NVL(MAX(reward_id), 0) + 1 FROM slf_deb3.tb_reward";
+        Long nextId = jdbcTemplate.queryForObject(getMaxIdSql, Long.class);
+        
         String sql = "INSERT INTO slf_deb3.tb_reward (reward_id, reward_name, reward_description, reward_type, " +
                 "points_required, quantity, remaining, is_active) " +
-                "VALUES (slf_deb3.tb_reward_seq.NEXTVAL, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[] {"reward_id"});
-            ps.setString(1, reward.getRewardName());
-            ps.setString(2, reward.getRewardDescription());
-            ps.setString(3, reward.getRewardType());
-            ps.setInt(4, reward.getPointsRequired());
-            ps.setInt(5, reward.getQuantity());
-            ps.setInt(6, reward.getRemaining() != null ? reward.getRemaining() : reward.getQuantity());
-            ps.setString(7, reward.getIsActive());
+            ps.setLong(1, nextId);
+            ps.setString(2, reward.getRewardName());
+            ps.setString(3, reward.getRewardDescription());
+            ps.setString(4, reward.getRewardType());
+            ps.setInt(5, reward.getPointsRequired());
+            ps.setInt(6, reward.getQuantity());
+            ps.setInt(7, reward.getRemaining() != null ? reward.getRemaining() : reward.getQuantity());
+            ps.setString(8, reward.getIsActive());
             return ps;
         }, keyHolder);
         
-        return keyHolder.getKey().longValue();
+        return nextId;
     }
     
     @Override
