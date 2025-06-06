@@ -161,7 +161,7 @@ public class RewardServiceImpl implements RewardService {
         }
     }
     
-    // เพิ่มเมธอดใหม่สำหรับการยกเลิกการรับรางวัล
+    // แก้ไขเมธอด cancelRewardClaim ให้คืนคะแนนและจำนวนรางวัล
     @Override
     public void cancelRewardClaim(Long claimId) {
         RewardClaim claim = rewardClaimDao.findById(claimId);
