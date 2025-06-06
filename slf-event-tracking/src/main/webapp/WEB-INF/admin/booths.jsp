@@ -36,6 +36,7 @@
                             <tr>
                                 <th class="py-3 px-4 border-b text-left">ชื่อบูธ</th>
                                 <th class="py-3 px-4 border-b text-center">คะแนน</th>
+                                <th class="py-3 px-4 border-b text-center">QR Code</th>
                                 <th class="py-3 px-4 border-b text-center">สถานะ</th>
                                 <th class="py-3 px-4 border-b text-center">วันที่สร้าง</th>
                                 <th class="py-3 px-4 border-b text-center">การจัดการ</th>
@@ -51,6 +52,28 @@
                                         </div>
                                     </td>
                                     <td class="py-2 px-4 border-b text-center"><%= booth.getPoints() %></td>
+                                    <td class="py-2 px-4 border-b text-center">
+                                        <% if (booth.getQrCodeUrl() != null) { %>
+                                            <div class="flex flex-col items-center">
+                                                <img src="${pageContext.request.contextPath}<%= booth.getQrCodeUrl() %>" alt="QR Code" class="w-20 h-20 mb-2">
+                                                <div class="flex space-x-2">
+                                                    <a href="${pageContext.request.contextPath}/admin/regenerate-qr?id=<%= booth.getBoothId() %>" 
+                                                       class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200">
+                                                        สร้างใหม่
+                                                    </a>
+                                                    <a href="${pageContext.request.contextPath}/admin/download-qr?id=<%= booth.getBoothId() %>" 
+                                                       class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs hover:bg-green-200">
+                                                        ดาวน์โหลด
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        <% } else { %>
+                                            <a href="${pageContext.request.contextPath}/admin/regenerate-qr?id=<%= booth.getBoothId() %>" 
+                                               class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200">
+                                                สร้าง QR Code
+                                            </a>
+                                        <% } %>
+                                    </td>
                                     <td class="py-2 px-4 border-b text-center">
                                         <% if ("1".equals(booth.getIsActive())) { %>
                                             <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">ใช้งาน</span>

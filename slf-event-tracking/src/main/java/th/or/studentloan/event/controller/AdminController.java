@@ -1,5 +1,8 @@
 package th.or.studentloan.event.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -71,6 +74,10 @@ public class AdminController extends AbstractController {
             return handleSaveBooth(request);
         } else if (path.equals("/admin/delete-booth")) {
             return handleDeleteBooth(request);
+        } else if (path.equals("/admin/regenerate-qr")) {
+            return handleRegenerateQR(request);
+        } else if (path.equals("/admin/download-qr")) {
+            return handleDownloadQR(request, response);
         }
         
         // Reward Management
@@ -224,6 +231,66 @@ public class AdminController extends AbstractController {
             boothService.deleteBooth(boothId);
         }
         
+        return new ModelAndView("redirect:/admin/booths");
+    }
+    
+    // เพิ่มเมธอดสำหรับสร้าง QR Code ใหม่
+    private ModelAndView handleRegenerateQR(HttpServletRequest request) {
+        String boothIdStr = request.getParameter("id");
+        
+        if (boothIdStr != null && !boothIdStr.isEmpty()) {
+            Long boothId = Long.parseLong(boothIdStr);
+            Booth booth = boothService.getBoothById(boothId);
+            
+            if (booth != null) {
+                String qrCodeUrl = boothService.regenerateQRCode(boothId);
+                booth.setQrCodeUrl(qrCodeUrl);
+                boothService.updateBooth(booth);
+            }
+        }
+        
+        // ถ้ามาจากหน้าฟอร์ม กลับไปที่ฟอร์ม
+        String fromForm = request.getParameter("fromForm");
+        if (fromForm != null && fromForm.equals("true") && boothIdStr != null) {
+            return new ModelAndView("redirect:/admin/booth-form?id=" + boothIdStr);
+        }
+        
+        // ถ้าไม่ได้มาจากฟอร์ม ให้กลับไปที่หน้ารายการบูธ
+        return new ModelAndView("redirect:/admin/booths");
+    }
+    
+    // เพิ่มเมธอดสำหรับดาวน์โหลด QR Code
+    private ModelAndView handleDownloadQR(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        String boothIdStr = request.getParameter("id");
+        
+        if (boothIdStr != null && !boothIdStr.isEmpty()) {
+            Long boothId = Long.parseLong(boothIdStr);
+            Booth booth = boothService.getBoothById(boothId);
+            
+            if (booth != null && booth.getQrCodeUrl() != null) {
+                String qrCodePath = request.getServletContext().getRealPath(booth.getQrCodeUrl());
+                File file = new File(qrCodePath);
+                
+                if (file.exists()) {
+                    response.setContentType("image/png");
+                    response.setHeader("Content-Disposition", "attachment; filename=booth_" + boothId + ".png");
+                    
+                    try (FileInputStream fis = new FileInputStream(file);
+                         OutputStream os = response.getOutputStream()) {
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        
+                        while ((bytesRead = fis.read(buffer)) != -1) {
+                            os.write(buffer, 0, bytesRead);
+                        }
+                    }
+                    
+                    return null; // ไม่ต้องส่งกลับ ModelAndView เพราะเขียน response โดยตรงแล้ว
+                }
+            }
+        }
+        
+        // กรณีไม่พบไฟล์หรือเกิดข้อผิดพลาด
         return new ModelAndView("redirect:/admin/booths");
     }
     

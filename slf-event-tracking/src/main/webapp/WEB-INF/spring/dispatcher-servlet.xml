@@ -73,6 +73,8 @@
                 <prop key="/admin/booth-form">adminController</prop>
                 <prop key="/admin/save-booth">adminController</prop>
                 <prop key="/admin/delete-booth">adminController</prop>
+                <prop key="/admin/regenerate-qr">adminController</prop>
+                <prop key="/admin/download-qr">adminController</prop>
                 <prop key="/admin/rewards">adminController</prop>
                 <prop key="/admin/reward-form">adminController</prop>
                 <prop key="/admin/save-reward">adminController</prop>

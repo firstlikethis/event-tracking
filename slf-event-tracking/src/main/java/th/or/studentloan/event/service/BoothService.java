@@ -14,4 +14,5 @@ public interface BoothService {
     boolean scanBoothQR(Long visitorId, Long boothId);
     List<VisitorLog> getVisitorLogs(Long visitorId);
     String generateQRCode(Long boothId);
+    String regenerateQRCode(Long boothId);
 }

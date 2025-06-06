@@ -104,4 +104,10 @@ public class BoothServiceImpl implements BoothService {
         
         return qrCodeUtil.generateQRCode(qrCodeData, fileName);
     }
+    
+    @Override
+    public String regenerateQRCode(Long boothId) {
+        // สร้าง QR Code ใหม่
+        return generateQRCode(boothId);
+    }
 }
