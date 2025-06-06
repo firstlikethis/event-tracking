@@ -56,10 +56,16 @@
                                     <td class="py-2 px-4 border-b text-center"><%= claim.getPointsUsed() %></td>
                                     <td class="py-2 px-4 border-b text-center"><%= dateFormat.format(claim.getClaimDate()) %></td>
                                     <td class="py-2 px-4 border-b text-center">
-                                        <a href="#" onclick="confirmMarkReceived(<%= claim.getClaimId() %>, '<%= claim.getVisitorName() %>', '<%= claim.getRewardName() %>')" 
-                                           class="px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200">
-                                            บันทึกการรับรางวัล
-                                        </a>
+                                        <div class="flex justify-center space-x-2">
+                                            <a href="#" onclick="confirmMarkReceived(<%= claim.getClaimId() %>, '<%= claim.getVisitorName() %>', '<%= claim.getRewardName() %>')" 
+                                               class="px-3 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200">
+                                                บันทึกการรับรางวัล
+                                            </a>
+                                            <a href="#" onclick="confirmCancel(<%= claim.getClaimId() %>, '<%= claim.getVisitorName() %>', '<%= claim.getRewardName() %>')" 
+                                               class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200">
+                                                ยกเลิกรางวัล
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <% } %>
@@ -74,6 +80,12 @@
         function confirmMarkReceived(id, visitorName, rewardName) {
             if (confirm("ยืนยันว่า " + visitorName + " ได้รับรางวัล '" + rewardName + "' แล้ว?")) {
                 window.location.href = "${pageContext.request.contextPath}/admin/mark-received?id=" + id;
+            }
+        }
+        
+        function confirmCancel(id, visitorName, rewardName) {
+            if (confirm("ยืนยันการยกเลิกรางวัล '" + rewardName + "' ของ " + visitorName + "? คะแนนจะถูกคืนให้กับผู้ใช้")) {
+                window.location.href = "${pageContext.request.contextPath}/admin/cancel-claim?id=" + id;
             }
         }
     </script>

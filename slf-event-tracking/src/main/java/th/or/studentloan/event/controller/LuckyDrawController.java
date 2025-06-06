@@ -31,6 +31,8 @@ public class LuckyDrawController extends AbstractController {
             return handleLuckyDraw(request);
         } else if (path.equals("/lucky-draw-result")) {
             return handleLuckyDrawResult(request);
+        } else if (path.equals("/lucky-draw-display")) {
+            return handleLuckyDrawDisplay(request);
         }
         
         return new ModelAndView("redirect:/admin");
@@ -40,9 +42,10 @@ public class LuckyDrawController extends AbstractController {
         // ดึงรายการรางวัลที่สามารถสุ่มได้ (ประเภท 1)
         List<Reward> luckyDrawRewards = rewardService.getAllActiveRewards().stream()
                 .filter(reward -> "1".equals(reward.getRewardType()) && reward.getRemaining() > 0)
-                .collect(Collectors.toList()); // แก้ไขจาก .toList() เป็น .collect(Collectors.toList())
+                .collect(Collectors.toList());
         
-        ModelAndView mv = new ModelAndView("views/lucky-draw");
+        // แก้ไขเส้นทางไปยัง admin/lucky-draw
+        ModelAndView mv = new ModelAndView("admin/lucky-draw");
         mv.addObject("rewards", luckyDrawRewards);
         
         // ถ้ามีการเลือกรางวัลแล้ว
@@ -71,8 +74,13 @@ public class LuckyDrawController extends AbstractController {
         Long rewardId = Long.parseLong(rewardIdStr);
         Reward reward = rewardService.getRewardById(rewardId);
         
-        if (reward == null) {
-            return new ModelAndView("redirect:/lucky-draw");
+        // ตรวจสอบว่ารางวัลยังเหลืออยู่หรือไม่
+        if (reward == null || reward.getRemaining() <= 0) {
+            // แก้ไขเส้นทางไปยัง admin/lucky-draw-result
+            ModelAndView mv = new ModelAndView("admin/lucky-draw-result");
+            mv.addObject("reward", reward);
+            mv.addObject("noMoreRewards", true);
+            return mv;
         }
         
         // สุ่มผู้โชคดี
@@ -80,7 +88,8 @@ public class LuckyDrawController extends AbstractController {
         
         // ถ้าไม่มีผู้มีสิทธิ์ลุ้นรางวัล
         if (winner == null) {
-            ModelAndView mv = new ModelAndView("views/lucky-draw-result");
+            // แก้ไขเส้นทางไปยัง admin/lucky-draw-result
+            ModelAndView mv = new ModelAndView("admin/lucky-draw-result");
             mv.addObject("reward", reward);
             mv.addObject("noEligibleParticipants", true);
             return mv;
@@ -89,10 +98,36 @@ public class LuckyDrawController extends AbstractController {
         // บันทึกการแลกรางวัล
         boolean success = rewardService.claimReward(winner.getVisitorId(), rewardId, true);
         
-        ModelAndView mv = new ModelAndView("views/lucky-draw-result");
+        // แก้ไขเส้นทางไปยัง admin/lucky-draw-result
+        ModelAndView mv = new ModelAndView("admin/lucky-draw-result");
         mv.addObject("reward", reward);
         mv.addObject("winner", winner);
         mv.addObject("success", success);
+        
+        return mv;
+    }
+    
+    private ModelAndView handleLuckyDrawDisplay(HttpServletRequest request) {
+        String rewardIdStr = request.getParameter("rewardId");
+        
+        if (rewardIdStr == null || rewardIdStr.isEmpty()) {
+            return new ModelAndView("redirect:/lucky-draw");
+        }
+        
+        Long rewardId = Long.parseLong(rewardIdStr);
+        Reward reward = rewardService.getRewardById(rewardId);
+        
+        if (reward == null) {
+            return new ModelAndView("redirect:/lucky-draw");
+        }
+        
+        // ดึงรายชื่อผู้โชคดีที่เคยถูกรางวัลนี้
+        List<RewardClaim> winners = rewardService.getWinnersByRewardId(rewardId);
+        
+        // แก้ไขเส้นทางไปยัง admin/lucky-draw-display
+        ModelAndView mv = new ModelAndView("admin/lucky-draw-display");
+        mv.addObject("reward", reward);
+        mv.addObject("winners", winners);
         
         return mv;
     }

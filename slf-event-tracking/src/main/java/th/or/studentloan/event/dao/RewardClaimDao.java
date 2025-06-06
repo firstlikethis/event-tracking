@@ -13,4 +13,8 @@ public interface RewardClaimDao {
     void markAsReceived(Long claimId);
     List<RewardClaim> findWinnersByRewardId(Long rewardId);
     List<Long> findVisitorsEligibleForLuckyDraw(Integer minPoints, List<String> eligibleTypes);
+    // เพิ่มเมธอดใหม่
+    void delete(Long claimId);
+    List<RewardClaim> findPendingClaimsByVisitorId(Long visitorId);
+    List<RewardClaim> findAllClaimsWithHistory();
 }

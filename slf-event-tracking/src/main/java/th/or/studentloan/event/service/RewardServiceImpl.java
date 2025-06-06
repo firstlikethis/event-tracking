@@ -88,6 +88,11 @@ public class RewardServiceImpl implements RewardService {
             return false;
         }
         
+        // ตรวจสอบสิทธิ์ในการลุ้นรางวัล (สำหรับรางวัลประเภทลุ้น)
+        if (isLuckyDraw && !isEligibleForLuckyDraw(visitorId)) {
+            return false;
+        }
+        
         // สร้างบันทึกการแลกรางวัล
         RewardClaim claim = new RewardClaim();
         claim.setVisitorId(visitorId);
@@ -137,17 +142,54 @@ public class RewardServiceImpl implements RewardService {
         // รายชื่อประเภทผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล
         List<String> eligibleTypes = Arrays.asList("1", "2", "3", "4");
         
-        // หารายการผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล
-        List<Long> eligibleVisitors = rewardClaimDao.findVisitorsEligibleForLuckyDraw(minPoints, eligibleTypes);
-        
-        if (eligibleVisitors.isEmpty()) {
+        try {
+            // หารายการผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล
+            List<Long> eligibleVisitors = rewardClaimDao.findVisitorsEligibleForLuckyDraw(minPoints, eligibleTypes);
+            
+            if (eligibleVisitors.isEmpty()) {
+                return null;
+            }
+            
+            // สุ่มเลือกผู้โชคดี
+            Random random = new Random();
+            Long winnerId = eligibleVisitors.get(random.nextInt(eligibleVisitors.size()));
+            
+            return visitorDao.findById(winnerId);
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
-        
-        // สุ่มเลือกผู้โชคดี
-        Random random = new Random();
-        Long winnerId = eligibleVisitors.get(random.nextInt(eligibleVisitors.size()));
-        
-        return visitorDao.findById(winnerId);
+    }
+    
+    // เพิ่มเมธอดใหม่สำหรับการยกเลิกการรับรางวัล
+    @Override
+    public void cancelRewardClaim(Long claimId) {
+        RewardClaim claim = rewardClaimDao.findById(claimId);
+        if (claim != null && "0".equals(claim.getIsReceived())) {
+            // คืนคะแนนให้ผู้ใช้
+            visitorDao.updatePoints(claim.getVisitorId(), claim.getPointsUsed());
+            
+            // เพิ่มจำนวนรางวัลกลับคืน
+            Reward reward = rewardDao.findById(claim.getRewardId());
+            reward.setRemaining(reward.getRemaining() + 1);
+            rewardDao.update(reward);
+            
+            // ลบรายการแลกรางวัล
+            rewardClaimDao.delete(claimId);
+        }
+    }
+    
+    // เพิ่มเมธอดใหม่สำหรับตรวจสอบสิทธิ์ในการลุ้นรางวัล
+    @Override
+    public boolean isEligibleForLuckyDraw(Long visitorId) {
+        // ตรวจสอบว่ามีรางวัลที่ยังไม่ได้รับหรือไม่
+        List<RewardClaim> pendingClaims = rewardClaimDao.findPendingClaimsByVisitorId(visitorId);
+        return pendingClaims.isEmpty();
+    }
+    
+    // เพิ่มเมธอดใหม่สำหรับดึงประวัติการแลกรางวัลทั้งหมด
+    @Override
+    public List<RewardClaim> getAllClaimsWithHistory() {
+        return rewardClaimDao.findAllClaimsWithHistory();
     }
 }

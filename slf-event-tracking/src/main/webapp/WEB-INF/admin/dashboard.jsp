@@ -60,7 +60,7 @@
                     <p class="text-gray-600 mb-4">ใช้สำหรับสุ่มรางวัลให้กับผู้เข้าร่วมกิจกรรม</p>
                     <div>
                         <a href="${pageContext.request.contextPath}/lucky-draw" 
-                           class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 inline-block">
+                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 inline-block">
                             ไปยังหน้าสุ่มรางวัล
                         </a>
                     </div>

@@ -26,4 +26,9 @@ public interface RewardService {
     
     List<RewardClaim> getWinnersByRewardId(Long rewardId);
     Visitor selectRandomWinner(Long rewardId, Integer minPoints);
+    
+    // เพิ่มเมธอดใหม่
+    void cancelRewardClaim(Long claimId);
+    boolean isEligibleForLuckyDraw(Long visitorId);
+    List<RewardClaim> getAllClaimsWithHistory();
 }

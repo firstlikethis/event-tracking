@@ -96,6 +96,8 @@ public class AdminController extends AbstractController {
             return handleClaims(request);
         } else if (path.equals("/admin/mark-received")) {
             return handleMarkReceived(request);
+        }else if (path.equals("/admin/cancel-claim")) {
+            return handleCancelClaim(request);
         }
         
         // Admin Management
@@ -108,6 +110,9 @@ public class AdminController extends AbstractController {
         } else if (path.equals("/admin/delete-admin")) {
             return handleDeleteAdmin(request);
         }
+
+        
+
         
         return new ModelAndView("redirect:/admin/dashboard");
     }
@@ -491,5 +496,21 @@ public class AdminController extends AbstractController {
         }
         
         return new ModelAndView("redirect:/admin/users");
+    }
+
+    // เพิ่มเมธอดใหม่
+    private ModelAndView handleCancelClaim(HttpServletRequest request) {
+        String claimIdStr = request.getParameter("id");
+        
+        if (claimIdStr != null && !claimIdStr.isEmpty()) {
+            try {
+                Long claimId = Long.parseLong(claimIdStr);
+                rewardService.cancelRewardClaim(claimId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return new ModelAndView("redirect:/admin/claims");
     }
 }

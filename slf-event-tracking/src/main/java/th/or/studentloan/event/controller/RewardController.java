@@ -76,6 +76,14 @@ public class RewardController extends AbstractController {
                 Long rewardId = Long.parseLong(rewardIdStr);
                 boolean isLuckyDraw = "1".equals(rewardTypeStr);
                 
+                // ตรวจสอบสิทธิ์ในการลุ้นรางวัลก่อน
+                if (isLuckyDraw && !rewardService.isEligibleForLuckyDraw(visitor.getVisitorId())) {
+                    ModelAndView mv = new ModelAndView("views/claim-result");
+                    mv.addObject("success", false);
+                    mv.addObject("message", "คุณมีรางวัลที่รอรับอยู่ กรุณาไปรับรางวัลก่อนจึงจะมีสิทธิ์ลุ้นรางวัลใหม่");
+                    return mv;
+                }
+                
                 // แลกรางวัล
                 boolean success = rewardService.claimReward(visitor.getVisitorId(), rewardId, isLuckyDraw);
                 

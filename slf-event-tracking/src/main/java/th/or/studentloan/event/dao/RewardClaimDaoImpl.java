@@ -3,6 +3,7 @@ package th.or.studentloan.event.dao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -107,13 +108,55 @@ public class RewardClaimDaoImpl implements RewardClaimDao {
     
     @Override
     public List<Long> findVisitorsEligibleForLuckyDraw(Integer minPoints, List<String> eligibleTypes) {
-        // สร้าง IN clause สำหรับ eligibleTypes
-        String typeClause = String.join(",", eligibleTypes.stream().map(type -> "'" + type + "'").toArray(String[]::new));
+        // ตรวจสอบว่า eligibleTypes ไม่เป็น null
+        if (eligibleTypes == null || eligibleTypes.isEmpty()) {
+            return new ArrayList<>();
+        }
         
-        String sql = "SELECT visitor_id FROM slf_deb3.tb_visitor " +
-                "WHERE total_points >= ? AND visitor_type IN (" + typeClause + ")";
+        // สร้าง IN clause สำหรับ eligibleTypes
+        StringBuilder typeClause = new StringBuilder();
+        for (int i = 0; i < eligibleTypes.size(); i++) {
+            if (i > 0) {
+                typeClause.append(",");
+            }
+            typeClause.append("'").append(eligibleTypes.get(i)).append("'");
+        }
+        
+        String sql = "SELECT v.visitor_id FROM slf_deb3.tb_visitor v " +
+                "WHERE v.total_points >= ? AND v.visitor_type IN (" + typeClause.toString() + ") " +
+                // เพิ่มเงื่อนไข: ไม่มีรางวัลที่รอรับอยู่
+                "AND NOT EXISTS (SELECT 1 FROM slf_deb3.tb_reward_claim rc WHERE rc.visitor_id = v.visitor_id AND rc.is_received = '0')";
                 
         return jdbcTemplate.queryForList(sql, Long.class, minPoints);
+    }
+    
+    // เพิ่มเมธอดใหม่สำหรับการลบรายการแลกรางวัล
+    @Override
+    public void delete(Long claimId) {
+        String sql = "DELETE FROM slf_deb3.tb_reward_claim WHERE claim_id = ?";
+        jdbcTemplate.update(sql, claimId);
+    }
+    
+    // เพิ่มเมธอดใหม่สำหรับค้นหารางวัลที่ยังไม่ได้รับของผู้ใช้
+    @Override
+    public List<RewardClaim> findPendingClaimsByVisitorId(Long visitorId) {
+        String sql = "SELECT rc.*, v.fullname AS visitor_name, r.reward_name " +
+                "FROM slf_deb3.tb_reward_claim rc " +
+                "JOIN slf_deb3.tb_visitor v ON rc.visitor_id = v.visitor_id " +
+                "JOIN slf_deb3.tb_reward r ON rc.reward_id = r.reward_id " +
+                "WHERE rc.visitor_id = ? AND rc.is_received = '0'";
+        return jdbcTemplate.query(sql, new RewardClaimRowMapper(), visitorId);
+    }
+    
+    // เพิ่มเมธอดใหม่สำหรับการค้นหาประวัติการแลกรางวัลทั้งหมด
+    @Override
+    public List<RewardClaim> findAllClaimsWithHistory() {
+        String sql = "SELECT rc.*, v.fullname AS visitor_name, r.reward_name " +
+                "FROM slf_deb3.tb_reward_claim rc " +
+                "JOIN slf_deb3.tb_visitor v ON rc.visitor_id = v.visitor_id " +
+                "JOIN slf_deb3.tb_reward r ON rc.reward_id = r.reward_id " +
+                "ORDER BY rc.claim_date DESC";
+        return jdbcTemplate.query(sql, new RewardClaimRowMapper());
     }
     
     private static class RewardClaimRowMapper implements RowMapper<RewardClaim> {

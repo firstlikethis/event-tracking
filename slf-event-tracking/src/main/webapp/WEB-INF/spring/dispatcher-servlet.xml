@@ -85,8 +85,11 @@
                 <prop key="/admin/admin-form">adminController</prop>
                 <prop key="/admin/save-admin">adminController</prop>
                 <prop key="/admin/delete-admin">adminController</prop>
+                <prop key="/admin/cancel-claim">adminController</prop>
+                <!-- Lucky Draw Controller Mappings -->
                 <prop key="/lucky-draw">luckyDrawController</prop>
                 <prop key="/lucky-draw-result">luckyDrawController</prop>
+                <prop key="/lucky-draw-display">luckyDrawController</prop>
             </props>
         </property>
     </bean>
