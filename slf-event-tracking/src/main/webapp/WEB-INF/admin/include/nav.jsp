@@ -15,7 +15,7 @@
                     <a href="${pageContext.request.contextPath}/admin/booths" class="px-3 py-2 text-gray-700 hover:text-blue-600">บูธ</a>
                     <a href="${pageContext.request.contextPath}/admin/rewards" class="px-3 py-2 text-gray-700 hover:text-blue-600">รางวัล</a>
                     <a href="${pageContext.request.contextPath}/admin/claims" class="px-3 py-2 text-gray-700 hover:text-blue-600">การรับรางวัล</a>
-                    <a href="${pageContext.request.contextPath}/lucky-draw" class="px-3 py-2 text-gray-700 hover:text-blue-600">สุ่มรางวัล</a>
+                    <a href="${pageContext.request.contextPath}/admin/lucky-draw" class="px-3 py-2 text-gray-700 hover:text-blue-600">สุ่มรางวัล</a>
                     <a href="${pageContext.request.contextPath}/admin/users" class="px-3 py-2 text-gray-700 hover:text-blue-600">ผู้ดูแลระบบ</a>
                 </div>
             </div>

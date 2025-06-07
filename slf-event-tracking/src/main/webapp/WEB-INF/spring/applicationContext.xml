@@ -83,6 +83,11 @@
         <property name="adminDao" ref="adminDao"/>
     </bean>
 
+    <bean id="luckyDrawController" class="th.or.studentloan.event.controller.LuckyDrawController">
+        <property name="rewardService" ref="rewardService"/>
+        <property name="visitorService" ref="visitorService"/>
+    </bean>
+
     <!-- Utility Beans -->
     <bean id="qrCodeUtil" class="th.or.studentloan.event.util.QrCodeUtil" />
     

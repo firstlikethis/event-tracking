@@ -89,6 +89,7 @@
                 <prop key="/admin/cancel-claim">adminController</prop>
                 <prop key="/admin/lucky-draw">luckyDrawController</prop>
                 <prop key="/admin/lucky-draw-display">luckyDrawController</prop>
+                <prop key="/admin/perform-lucky-draw">luckyDrawController</prop>
             </props>
         </property>
     </bean>
