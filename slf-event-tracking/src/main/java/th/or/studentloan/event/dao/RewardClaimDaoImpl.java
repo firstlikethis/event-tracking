@@ -108,26 +108,31 @@ public class RewardClaimDaoImpl implements RewardClaimDao {
     
     @Override
     public List<Long> findVisitorsEligibleForLuckyDraw(Integer minPoints, List<String> eligibleTypes) {
-        // ตรวจสอบว่า eligibleTypes ไม่เป็น null
+        // ตรวจสอบว่า eligibleTypes ไม่เป็น null และไม่ว่างเปล่า
         if (eligibleTypes == null || eligibleTypes.isEmpty()) {
             return new ArrayList<>();
         }
         
-        // สร้าง IN clause สำหรับ eligibleTypes
-        StringBuilder typeClause = new StringBuilder();
-        for (int i = 0; i < eligibleTypes.size(); i++) {
-            if (i > 0) {
-                typeClause.append(",");
+        try {
+            // สร้าง IN clause สำหรับ eligibleTypes
+            StringBuilder typeClause = new StringBuilder();
+            for (int i = 0; i < eligibleTypes.size(); i++) {
+                if (i > 0) {
+                    typeClause.append(",");
+                }
+                typeClause.append("'").append(eligibleTypes.get(i)).append("'");
             }
-            typeClause.append("'").append(eligibleTypes.get(i)).append("'");
+            
+            String sql = "SELECT v.visitor_id FROM slf_deb3.tb_visitor v " +
+                    "WHERE v.total_points >= ? AND v.visitor_type IN (" + typeClause.toString() + ") " +
+                    // เพิ่มเงื่อนไข: ไม่มีรางวัลที่รอรับอยู่
+                    "AND NOT EXISTS (SELECT 1 FROM slf_deb3.tb_reward_claim rc WHERE rc.visitor_id = v.visitor_id AND rc.is_received = '0')";
+                    
+            return jdbcTemplate.queryForList(sql, Long.class, minPoints);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
-        
-        String sql = "SELECT v.visitor_id FROM slf_deb3.tb_visitor v " +
-                "WHERE v.total_points >= ? AND v.visitor_type IN (" + typeClause.toString() + ") " +
-                // เพิ่มเงื่อนไข: ไม่มีรางวัลที่รอรับอยู่
-                "AND NOT EXISTS (SELECT 1 FROM slf_deb3.tb_reward_claim rc WHERE rc.visitor_id = v.visitor_id AND rc.is_received = '0')";
-                
-        return jdbcTemplate.queryForList(sql, Long.class, minPoints);
     }
     
     // เพิ่มเมธอดใหม่สำหรับการลบรายการแลกรางวัล

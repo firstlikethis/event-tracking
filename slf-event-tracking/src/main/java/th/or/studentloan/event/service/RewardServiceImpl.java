@@ -46,9 +46,20 @@ public class RewardServiceImpl implements RewardService {
     @Override
     public Reward createReward(Reward reward) {
         reward.setIsActive("1");
+        // ตรวจสอบข้อมูลก่อนบันทึก
         if (reward.getRemaining() == null) {
             reward.setRemaining(reward.getQuantity());
         }
+        if (reward.getRewardType() == null) {
+            reward.setRewardType("2"); // แลกทันที เป็นค่าเริ่มต้น
+        }
+        if (reward.getPointsRequired() == null) {
+            reward.setPointsRequired(10); // ค่าเริ่มต้น
+        }
+        if (reward.getQuantity() == null) {
+            reward.setQuantity(1); // ค่าเริ่มต้น
+        }
+        
         Long rewardId = rewardDao.save(reward);
         reward.setRewardId(rewardId);
         return reward;
@@ -56,6 +67,20 @@ public class RewardServiceImpl implements RewardService {
     
     @Override
     public void updateReward(Reward reward) {
+        // ตรวจสอบข้อมูลก่อนอัพเดต
+        if (reward.getRemaining() == null && reward.getQuantity() != null) {
+            reward.setRemaining(reward.getQuantity());
+        }
+        if (reward.getRewardType() == null) {
+            reward.setRewardType("2"); // แลกทันที เป็นค่าเริ่มต้น
+        }
+        if (reward.getPointsRequired() == null) {
+            reward.setPointsRequired(10); // ค่าเริ่มต้น
+        }
+        if (reward.getQuantity() == null) {
+            reward.setQuantity(1); // ค่าเริ่มต้น
+        }
+        
         rewardDao.update(reward);
     }
     
@@ -139,20 +164,21 @@ public class RewardServiceImpl implements RewardService {
     
     @Override
     public Visitor selectRandomWinner(Long rewardId, Integer minPoints) {
-        // รายชื่อประเภทผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล
-        List<String> eligibleTypes = Arrays.asList("1", "2", "3", "4");
-        
         try {
+            // รายชื่อประเภทผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล
+            List<String> eligibleTypes = Arrays.asList("1", "2", "3", "4");
+            
             // หารายการผู้เข้าร่วมที่มีสิทธิ์ลุ้นรางวัล
             List<Long> eligibleVisitors = rewardClaimDao.findVisitorsEligibleForLuckyDraw(minPoints, eligibleTypes);
             
-            if (eligibleVisitors.isEmpty()) {
+            if (eligibleVisitors == null || eligibleVisitors.isEmpty()) {
                 return null;
             }
             
             // สุ่มเลือกผู้โชคดี
             Random random = new Random();
-            Long winnerId = eligibleVisitors.get(random.nextInt(eligibleVisitors.size()));
+            int index = random.nextInt(eligibleVisitors.size());
+            Long winnerId = eligibleVisitors.get(index);
             
             return visitorDao.findById(winnerId);
         } catch (Exception e) {
@@ -171,8 +197,10 @@ public class RewardServiceImpl implements RewardService {
             
             // เพิ่มจำนวนรางวัลกลับคืน
             Reward reward = rewardDao.findById(claim.getRewardId());
-            reward.setRemaining(reward.getRemaining() + 1);
-            rewardDao.update(reward);
+            if (reward != null) {
+                reward.setRemaining(reward.getRemaining() + 1);
+                rewardDao.update(reward);
+            }
             
             // ลบรายการแลกรางวัล
             rewardClaimDao.delete(claimId);
