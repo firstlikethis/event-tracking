@@ -10,6 +10,8 @@
     <title>สุ่มรางวัล - SLF Event Tracking</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 สำหรับการแสดง Dialog สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-100 font-sans">
     <% 
@@ -17,14 +19,23 @@
         Map<Long, Object[]> winnersMap = (Map<Long, Object[]>) request.getAttribute("winnersMap");
     %>
     
-    <!-- Admin Navigation -->
     <jsp:include page="include/nav.jsp" />
     
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold text-gray-800">ระบบสุ่มรางวัล</h1>
-                <a href="${pageContext.request.contextPath}/admin/dashboard" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">กลับหน้าหลัก</a>
+                <div class="flex space-x-2">
+                    <!-- เปลี่ยนแปลงตรงนี้: ไม่ส่ง rewardId ในลิงก์เปิดหน้าจอสุ่มรางวัล -->
+                    <a href="${pageContext.request.contextPath}/lucky-draw-display" target="_blank" 
+                       class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        เปิดหน้าจอสุ่มรางวัล
+                    </a>
+                    <a href="${pageContext.request.contextPath}/admin/dashboard" 
+                       class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        กลับหน้าหลัก
+                    </a>
+                </div>
             </div>
             
             <div class="mb-6">
@@ -78,16 +89,11 @@
                                 
                                 <% if (reward.getRemaining() > 0) { %>
                                     <div class="flex flex-col space-y-2">
-                                        <a href="${pageContext.request.contextPath}/lucky-draw-result?rewardId=<%= reward.getRewardId() %>" 
-                                           class="px-4 py-2 bg-purple-600 text-white text-center rounded-md hover:bg-purple-700 transition-colors">
+                                        <!-- เปลี่ยนจาก <a> เป็น <button> และเรียกใช้ฟังก์ชัน startLuckyDraw แทน -->
+                                        <button onclick="startLuckyDraw(<%= reward.getRewardId() %>)" 
+                                                class="px-4 py-2 bg-purple-600 text-white text-center rounded-md hover:bg-purple-700 transition-colors">
                                             สุ่มผู้โชคดี
-                                        </a>
-                                        
-                                        <a href="${pageContext.request.contextPath}/lucky-draw-display?rewardId=<%= reward.getRewardId() %>" 
-                                           class="px-4 py-2 bg-blue-500 text-white text-center rounded-md hover:bg-blue-600 transition-colors"
-                                           target="_blank">
-                                            เปิดหน้าจอสุ่มรางวัล
-                                        </a>
+                                        </button>
                                         
                                         <button onclick="viewWinners(<%= reward.getRewardId() %>, '<%= reward.getRewardName() %>')" 
                                                 class="px-4 py-2 bg-green-500 text-white text-center rounded-md hover:bg-green-600 transition-colors">
@@ -99,12 +105,6 @@
                                         <button disabled class="px-4 py-2 bg-gray-300 text-gray-500 text-center rounded-md cursor-not-allowed">
                                             หมดรางวัลแล้ว
                                         </button>
-                                        
-                                        <a href="${pageContext.request.contextPath}/lucky-draw-display?rewardId=<%= reward.getRewardId() %>" 
-                                           class="px-4 py-2 bg-blue-500 text-white text-center rounded-md hover:bg-blue-600 transition-colors"
-                                           target="_blank">
-                                            เปิดหน้าจอแสดงผล
-                                        </a>
                                         
                                         <button onclick="viewWinners(<%= reward.getRewardId() %>, '<%= reward.getRewardName() %>')" 
                                                 class="px-4 py-2 bg-green-500 text-white text-center rounded-md hover:bg-green-600 transition-colors">
@@ -147,6 +147,46 @@
     </div>
     
     <script>
+        // ฟังก์ชันใหม่สำหรับเริ่มการสุ่มรางวัล
+        function startLuckyDraw(rewardId) {
+            Swal.fire({
+                title: 'ยืนยันการสุ่มรางวัล',
+                text: 'คุณต้องการเริ่มการสุ่มรางวัลนี้ใช่หรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, เริ่มสุ่มรางวัล',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#EF4444'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // แจ้ง API ว่าเริ่มการสุ่ม
+                    fetch('${pageContext.request.contextPath}/api/start-draw?rewardId=' + rewardId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // ไปยังหน้าผลการสุ่มรางวัล
+                                window.location.href = '${pageContext.request.contextPath}/lucky-draw-result?rewardId=' + rewardId;
+                            } else {
+                                Swal.fire(
+                                    'เกิดข้อผิดพลาด',
+                                    data.message || 'ไม่สามารถเริ่มการสุ่มรางวัลได้',
+                                    'error'
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error starting draw:', error);
+                            Swal.fire(
+                                'เกิดข้อผิดพลาด',
+                                'ไม่สามารถเริ่มการสุ่มรางวัลได้ กรุณาลองใหม่อีกครั้ง',
+                                'error'
+                            );
+                        });
+                }
+            });
+        }
+
         function viewWinners(rewardId, rewardName) {
                 const modal = document.getElementById('winnersModal');
                 const modalTitle = document.getElementById('modalTitle');

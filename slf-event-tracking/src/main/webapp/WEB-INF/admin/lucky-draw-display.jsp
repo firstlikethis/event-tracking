@@ -23,39 +23,18 @@
         <div class="bg-white rounded-lg shadow-lg p-4 max-h-96 overflow-y-auto max-w-md">
             <h3 class="text-lg font-bold text-purple-800 mb-3">ผู้โชคดีที่ผ่านมา</h3>
             
-            <% if (winners != null && !winners.isEmpty()) { %>
-                <ul class="divide-y divide-gray-200" id="winnersList">
-                    <% for (RewardClaim winner : winners) { %>
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-2 px-4 border-b">${winner.visitorName}</td>
-                            <td class="py-2 px-4 border-b text-center">${winner.claimDate}</td>
-                            <td class="py-2 px-4 border-b text-center">
-                                <c:if test="${winner.isReceived == '1'}">
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">รับแล้ว</span>
-                                </c:if>
-                                <c:if test="${winner.isReceived != '1'}">
-                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">รอรับ</span>
-                                </c:if>
-                            </td>
-                        </tr>
-                    <% } %>
-                </ul>
-            <% } else { %>
-                <p class="text-gray-500" id="noWinnersMessage">ยังไม่มีผู้โชคดีได้รับรางวัลนี้</p>
-                <ul class="divide-y divide-gray-200 hidden" id="winnersList"></ul>
-            <% } %>
+            <div id="noWinnersMessage" class="text-gray-500">กำลังโหลดข้อมูล...</div>
+            <ul class="divide-y divide-gray-200 hidden" id="winnersList"></ul>
         </div>
     </div>
     
     <div class="container mx-auto px-4 py-10 flex flex-col justify-center items-center min-h-screen relative z-10">
-        <% if (reward != null) { %>
+        <div id="mainContent">
             <div class="text-center mb-10">
                 <h1 class="text-5xl font-bold mb-4 animate-pulse">การสุ่มรางวัล</h1>
                 <div class="bg-purple-800 rounded-lg p-6 inline-block">
-                    <h2 class="text-3xl font-bold text-white mb-2"><%= reward.getRewardName() %></h2>
-                    <% if (reward.getRewardDescription() != null && !reward.getRewardDescription().isEmpty()) { %>
-                        <p class="text-purple-200 text-xl"><%= reward.getRewardDescription() %></p>
-                    <% } %>
+                    <h2 id="rewardName" class="text-3xl font-bold text-white mb-2">รอการเริ่มสุ่มรางวัล</h2>
+                    <p id="rewardDescription" class="text-purple-200 text-xl">กรุณารอเจ้าหน้าที่เริ่มการสุ่มรางวัล</p>
                 </div>
             </div>
             
@@ -104,15 +83,17 @@
                     </div>
                 </div>
             </div>
-        <% } else { %>
-            <div class="text-center">
-                <h1 class="text-4xl font-bold mb-6">ไม่พบข้อมูลรางวัล</h1>
-                <p class="text-xl mb-8">ไม่พบข้อมูลรางวัลที่ต้องการสุ่ม กรุณาลองใหม่อีกครั้ง</p>
-                <a href="${pageContext.request.contextPath}/lucky-draw" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors">
-                    กลับไปหน้าสุ่มรางวัล
-                </a>
+        </div>
+        
+        <div id="noActiveDrawing" class="text-center hidden">
+            <h1 class="text-4xl font-bold mb-6">ยังไม่มีการสุ่มรางวัล</h1>
+            <p class="text-xl mb-8">กรุณารอการเริ่มการสุ่มรางวัลจากเจ้าหน้าที่</p>
+            <div class="animate-bounce text-yellow-400 text-5xl mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
             </div>
-        <% } %>
+        </div>
     </div>
     
     <!-- Background Animation -->
@@ -121,7 +102,6 @@
         <div id="stars" class="absolute inset-0"></div>
     </div>
     
-    <% if (reward != null) { %>
     <script>
         // Sample data for drawing animation
         const sampleNames = [
@@ -132,6 +112,8 @@
         ];
         
         // Elements
+        const mainContent = document.getElementById('mainContent');
+        const noActiveDrawing = document.getElementById('noActiveDrawing');
         const waitingSection = document.getElementById('waitingSection');
         const drawingSection = document.getElementById('drawingSection');
         const nameScroller = document.getElementById('nameScroller');
@@ -140,6 +122,8 @@
         const winnerSection = document.getElementById('winnerSection');
         const winnerName = document.getElementById('winnerName');
         const winnerPhone = document.getElementById('winnerPhone');
+        const rewardNameElement = document.getElementById('rewardName');
+        const rewardDescriptionElement = document.getElementById('rewardDescription');
         const noWinnersMessage = document.getElementById('noWinnersMessage');
         const winnersList = document.getElementById('winnersList');
         
@@ -148,73 +132,201 @@
         let drawingInterval;
         let progressInterval;
         let pollingInterval;
+        let winnersPollingInterval;
         let currentProgress = 0;
         let drawingSpeed = 100; // ms between name changes
         let drawingDuration = 8000; // total drawing time in ms
         let winnerData = null;
+        let currentRewardId = null;
         
         // Create stars
         function createStars() {
             const stars = document.getElementById('stars');
             for (let i = 0; i < 200; i++) {
                 const star = document.createElement('div');
-                star.className = 'absolute rounded-full';
-                
-                // Random size
-                const size = Math.random() * 3 + 1;
-                star.style.width = `${size}px`;
-                star.style.height = `${size}px`;
-                
-                // Random position
+                star.classList.add('star');
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
                 star.style.left = `${Math.random() * 100}%`;
                 star.style.top = `${Math.random() * 100}%`;
-                
-                // Random opacity and color
-                star.style.opacity = Math.random() * 0.8 + 0.2;
-                star.style.backgroundColor = i % 5 === 0 ? '#f0f0f0' : '#ffffff';
-                
-                // Animation
-                const duration = Math.random() * 3 + 2;
-                star.style.animation = `twinkle ${duration}s infinite alternate`;
-                
+                star.style.animationDuration = `${Math.random() * 3 + 1}s`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
                 stars.appendChild(star);
             }
         }
         
-        // Animate name scrolling
-        function animateNameScroller() {
-            let index = 0;
-            
-            drawingInterval = setInterval(() => {
-                if (drawingSpeed > 30) {
-                    drawingSpeed -= 1; // Speed up gradually
-                }
-                
-                // Get random name
-                const randomIndex = Math.floor(Math.random() * sampleNames.length);
-                nameScroller.textContent = sampleNames[randomIndex];
-                
-                // Apply random transform
-                const yPos = Math.random() * 20 - 10;
-                nameScroller.style.transform = `translateY(${yPos}px)`;
-                
-                index++;
-            }, drawingSpeed);
+        // Add CSS for stars
+        const starStyle = document.createElement('style');
+        starStyle.textContent = `
+            .star {
+                position: absolute;
+                background-color: white;
+                border-radius: 50%;
+                opacity: 0;
+                animation: twinkle ease-in-out infinite;
+            }
+            @keyframes twinkle {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 0.8; }
+            }
+        `;
+        document.head.appendChild(starStyle);
+        createStars();
+        
+        // Function to poll for current drawing
+        function pollCurrentDrawing() {
+            fetch('api/current-drawing')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新页面上的奖品信息
+                        currentRewardId = data.rewardId;
+                        rewardNameElement.textContent = data.rewardName || "รอการเริ่มสุ่มรางวัล";
+                        rewardDescriptionElement.textContent = data.rewardDescription || "";
+                        
+                        // ตรวจสอบสถานะการสุ่ม
+                        if (data.isActive) {
+                            // แสดงส่วนเนื้อหาหลัก
+                            mainContent.classList.remove('hidden');
+                            noActiveDrawing.classList.add('hidden');
+                            
+                            // ตรวจสอบว่ามีผู้ชนะหรือไม่
+                            if (data.winner) {
+                                // ถ้ามีผู้ชนะแล้ว แสดงผลผู้ชนะทันที
+                                if (!isDrawing && !winnerData) {
+                                    winnerData = data.winner;
+                                    startDrawingAnimation();
+                                }
+                            } else {
+                                // กำลังอยู่ในโหมดรอหรือกำลังสุ่ม
+                                waitingSection.classList.remove('hidden');
+                                drawingSection.classList.add('hidden');
+                                winnerSection.classList.add('hidden');
+                            }
+                            
+                            // โหลดรายชื่อผู้โชคดีที่เคยถูกรางวัลนี้
+                            loadWinners(currentRewardId);
+                        } else {
+                            // ไม่มีการสุ่มที่กำลังดำเนินอยู่
+                            resetDisplay();
+                        }
+                    } else {
+                        // ไม่มีการสุ่มที่กำลังดำเนินอยู่
+                        resetDisplay();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling current drawing:', error);
+                });
         }
         
-        // Animate progress bar
-        function animateProgressBar() {
+        // Function to load winners for the current reward
+        function loadWinners(rewardId) {
+            if (!rewardId) return;
+            
+            fetch(`api/get-winners?rewardId=${rewardId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.winners && data.winners.length > 0) {
+                        // Clear previous list
+                        winnersList.innerHTML = '';
+                        noWinnersMessage.classList.add('hidden');
+                        winnersList.classList.remove('hidden');
+                        
+                        // Add winners to the list
+                        data.winners.forEach(winner => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'py-2';
+                            
+                            const nameSpan = document.createElement('span');
+                            nameSpan.className = 'font-medium text-gray-800';
+                            nameSpan.textContent = winner.visitorName;
+                            
+                            const dateSpan = document.createElement('span');
+                            dateSpan.className = 'text-sm text-gray-500 ml-2';
+                            dateSpan.textContent = winner.claimDate;
+                            
+                            listItem.appendChild(nameSpan);
+                            listItem.appendChild(dateSpan);
+                            
+                            if (winner.isReceived === '1') {
+                                const badge = document.createElement('span');
+                                badge.className = 'ml-2 px-2 py-1 text-xs rounded bg-green-100 text-green-800';
+                                badge.textContent = 'รับแล้ว';
+                                listItem.appendChild(badge);
+                            }
+                            
+                            winnersList.appendChild(listItem);
+                        });
+                    } else {
+                        // No winners yet
+                        noWinnersMessage.textContent = 'ยังไม่มีผู้ได้รับรางวัลนี้';
+                        noWinnersMessage.classList.remove('hidden');
+                        winnersList.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading winners:', error);
+                });
+        }
+        
+        // Function to reset display to waiting state
+        function resetDisplay() {
+            mainContent.classList.add('hidden');
+            noActiveDrawing.classList.remove('hidden');
+            waitingSection.classList.remove('hidden');
+            drawingSection.classList.add('hidden');
+            winnerSection.classList.add('hidden');
+            
+            // Reset variables
+            isDrawing = false;
             currentProgress = 0;
+            winnerData = null;
+            
+            // Clear intervals
+            if (drawingInterval) clearInterval(drawingInterval);
+            if (progressInterval) clearInterval(progressInterval);
+            
+            // Reset progress bar
             progressFill.style.width = '0%';
+        }
+        
+        // Function to start the drawing animation
+        function startDrawingAnimation() {
+            // Reset state
+            isDrawing = true;
+            currentProgress = 0;
             
-            const step = 100 / (drawingDuration / 100); // Update every 100ms
+            // Hide waiting section, show drawing section
+            waitingSection.classList.add('hidden');
+            drawingSection.classList.remove('hidden');
+            winnerSection.classList.add('hidden');
             
+            // Start the name scrolling animation
+            drawingInterval = setInterval(() => {
+                // Pick a random name from the sample names
+                const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+                nameScroller.textContent = randomName;
+                
+                // Add a visual effect
+                nameScroller.classList.add('scale-110');
+                setTimeout(() => {
+                    nameScroller.classList.remove('scale-110');
+                }, 50);
+            }, drawingSpeed);
+            
+            // Update progress bar
             progressInterval = setInterval(() => {
-                currentProgress += step;
+                currentProgress += (100 * 100 / drawingDuration);
                 if (currentProgress >= 100) {
                     currentProgress = 100;
+                    
+                    // Clear intervals
+                    clearInterval(drawingInterval);
                     clearInterval(progressInterval);
-                    finishDrawing();
+                    
+                    // Show winner
+                    showWinner();
                 }
                 progressFill.style.width = `${currentProgress}%`;
                 
@@ -222,227 +334,82 @@
                 if (currentProgress < 30) {
                     drawingMessage.textContent = "กำลังสุ่มรางวัล...";
                 } else if (currentProgress < 60) {
-                    drawingMessage.textContent = "ใกล้ได้ผู้โชคดีแล้ว...";
+                    drawingMessage.textContent = "ใกล้จะได้ผลแล้ว...";
                 } else if (currentProgress < 90) {
                     drawingMessage.textContent = "อีกนิดเดียว...";
                 } else {
-                    drawingMessage.textContent = "เตรียมพบผู้โชคดี!";
+                    drawingMessage.textContent = "ได้ผู้โชคดีแล้ว!";
                 }
             }, 100);
         }
         
-        // Fetch winner data
-        async function fetchWinnerData() {
-            try {
-                const response = await fetch('${pageContext.request.contextPath}/api/get-winner?rewardId=${reward.getRewardId()}');
-                const data = await response.json();
+        // Function to show the winner
+        function showWinner() {
+            // Set the winner name and phone
+            if (winnerData) {
+                winnerName.textContent = winnerData.name;
                 
-                if (data.success) {
-                    return {
-                        name: data.winnerName,
-                        phone: data.winnerPhone,
-                        visitorId: data.visitorId
-                    };
-                } else {
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error fetching winner:', error);
-                return null;
+                // Format phone number to show only last 4 digits
+                const phone = winnerData.phone;
+                const maskedPhone = phone ? 
+                    phone.substring(0, phone.length - 4).replace(/\d/g, 'x') + 
+                    phone.substring(phone.length - 4) : '';
+                winnerPhone.textContent = maskedPhone;
+            } else {
+                winnerName.textContent = "ไม่พบผู้โชคดี";
+                winnerPhone.textContent = "";
             }
-        }
-        
-        // Check if we should start drawing
-        async function checkDrawingStatus() {
-            try {
-                const response = await fetch('${pageContext.request.contextPath}/api/get-winner?rewardId=${reward.getRewardId()}');
-                const data = await response.json();
-                
-                // If winner data exists and we're not already drawing, start drawing
-                if (data.success && !isDrawing) {
-                    winnerData = {
-                        name: data.winnerName,
-                        phone: data.winnerPhone,
-                        visitorId: data.visitorId
-                    };
-                    
-                    startDrawing();
-                }
-            } catch (error) {
-                console.error('Error checking drawing status:', error);
-            }
-        }
-        
-        // Start drawing animation
-        async function startDrawing() {
-            if (isDrawing) return;
-            isDrawing = true;
-            
-            // Stop polling when we start drawing
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-            }
-            
-            // Hide waiting section, show drawing section
-            waitingSection.classList.add('hidden');
-            drawingSection.classList.remove('hidden');
-            
-            // Start animations
-            animateNameScroller();
-            animateProgressBar();
-        }
-        
-        // Finish drawing and show winner
-        function finishDrawing() {
-            // Stop animations
-            clearInterval(drawingInterval);
-            clearInterval(progressInterval);
-            isDrawing = false;
             
             // Hide drawing section, show winner section
             drawingSection.classList.add('hidden');
             winnerSection.classList.remove('hidden');
             
-            // Display winner info
-            winnerName.textContent = winnerData.name;
-            winnerPhone.textContent = formatPhoneNumber(winnerData.phone);
+            // Trigger confetti effect
+            triggerConfetti();
             
-            // Update winners list
-            updateWinnersList(winnerData);
-            
-            // Launch confetti
-            launchConfetti();
-            
-            // Restart polling after 10 seconds
-            setTimeout(() => {
-                resetToWaiting();
-            }, 30000); // 30 seconds
-        }
-        
-        // Reset to waiting screen
-        function resetToWaiting() {
-            // Hide winner section, show waiting section
-            winnerSection.classList.add('hidden');
-            waitingSection.classList.remove('hidden');
-            
-            // Reset state
+            // Reset drawing state
             isDrawing = false;
-            drawingSpeed = 100;
-            currentProgress = 0;
-            progressFill.style.width = '0%';
-            
-            // Start polling again
-            startPolling();
         }
         
-        // Update winners list in sidebar
-        function updateWinnersList(winner) {
-            if (noWinnersMessage) {
-                noWinnersMessage.classList.add('hidden');
-            }
-            
-            winnersList.classList.remove('hidden');
-            
-            // Create new winner item
-            const listItem = document.createElement('li');
-            listItem.className = 'py-2';
-            
-            const nameElement = document.createElement('p');
-            nameElement.className = 'text-gray-800 font-medium';
-            nameElement.textContent = winner.name;
-            
-            const dateElement = document.createElement('p');
-            dateElement.className = 'text-gray-500 text-sm';
-            
-            // Format current date
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            
-            dateElement.textContent = `${day}/${month}/${year} ${hours}:${minutes}`;
-            
-            listItem.appendChild(nameElement);
-            listItem.appendChild(dateElement);
-            
-            // Add to the top of the list
-            winnersList.insertBefore(listItem, winnersList.firstChild);
-        }
-        
-        // Format phone number (e.g., 08x-xxx-xxxx)
-        function formatPhoneNumber(phone) {
-            if (!phone || phone.length < 10) return phone;
-            
-            return `${phone.substring(0, 3)}-${phone.substring(3, 6)}-${phone.substring(6)}`;
-        }
-        
-        // Launch confetti animation
-        function launchConfetti() {
+        // Function to trigger confetti effect
+        function triggerConfetti() {
+            // Use canvas-confetti library
             const duration = 5 * 1000;
             const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
             
             function randomInRange(min, max) {
                 return Math.random() * (max - min) + min;
             }
             
-            // Run confetti
-            (function frame() {
+            const interval = setInterval(function() {
                 const timeLeft = animationEnd - Date.now();
                 
-                if (timeLeft <= 0) return;
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
                 
                 const particleCount = 50 * (timeLeft / duration);
                 
-                // Launch confetti from both sides
-                confetti({
-                    particleCount: particleCount,
-                    angle: randomInRange(55, 125),
-                    spread: randomInRange(50, 70),
-                    origin: { x: 0 },
-                    colors: ['#FFD700', '#FFC107', '#FFEB3B', '#9C27B0', '#673AB7']
-                });
-                
-                confetti({
-                    particleCount: particleCount,
-                    angle: randomInRange(55, 125),
-                    spread: randomInRange(50, 70),
-                    origin: { x: 1 },
-                    colors: ['#FFD700', '#FFC107', '#FFEB3B', '#9C27B0', '#673AB7']
-                });
-                
-                requestAnimationFrame(frame);
-            }());
+                // since particles fall down, start a bit higher than random
+                confetti(
+                    Object.assign({}, defaults, {
+                        particleCount,
+                        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                    })
+                );
+                confetti(
+                    Object.assign({}, defaults, {
+                        particleCount,
+                        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                    })
+                );
+            }, 250);
         }
         
-        // Start polling for winner data
-        function startPolling() {
-            // Check immediately when the page loads
-            checkDrawingStatus();
-            
-            // Then poll every 2 seconds
-            pollingInterval = setInterval(checkDrawingStatus, 2000);
-        }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            createStars();
-            
-            // Add CSS for star animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes twinkle {
-                    0% { opacity: 0.2; }
-                    100% { opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // Start polling
-            startPolling();
-        });
+        // Start polling for current drawing and winners
+        pollingInterval = setInterval(pollCurrentDrawing, 2000);
+        pollCurrentDrawing(); // Initial poll
     </script>
-    <% } %>
 </body>
 </html>

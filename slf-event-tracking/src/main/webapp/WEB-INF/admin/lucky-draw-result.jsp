@@ -9,8 +9,10 @@
     <title>ผลการสุ่มรางวัล - SLF Event Tracking</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 min-h-screen">
     <% 
         Reward reward = (Reward) request.getAttribute("reward");
         Visitor winner = (Visitor) request.getAttribute("winner");
@@ -18,89 +20,185 @@
         Boolean noMoreRewards = (Boolean) request.getAttribute("noMoreRewards");
         Boolean noEligibleParticipants = (Boolean) request.getAttribute("noEligibleParticipants");
     %>
-    
-    <!-- Admin Navigation -->
+
     <jsp:include page="include/nav.jsp" />
     
     <div class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 max-w-2xl mx-auto">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold text-gray-800">ผลการสุ่มรางวัล</h1>
-                <div>
-                    <a href="${pageContext.request.contextPath}/lucky-draw" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">กลับไปหน้าสุ่มรางวัล</a>
-                </div>
+                <a href="<%=request.getContextPath()%>/lucky-draw" class="text-purple-600 hover:text-purple-800">
+                    กลับไปหน้าสุ่มรางวัล
+                </a>
             </div>
             
             <% if (reward != null) { %>
-                <div class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <h2 class="text-xl font-semibold text-purple-800 mb-2">รางวัล: <%= reward.getRewardName() %></h2>
-                    <p class="text-purple-700 mb-2">รายละเอียด: <%= reward.getRewardDescription() != null ? reward.getRewardDescription() : "-" %></p>
-                    <p class="text-purple-700">คะแนนที่ต้องใช้: <%= reward.getPointsRequired() %> คะแนน</p>
+                <div class="mb-6 p-4 bg-purple-50 rounded-lg">
+                    <h2 class="text-xl font-semibold text-purple-800 mb-2"><%= reward.getRewardName() %></h2>
+                    <p class="text-gray-600"><%= reward.getRewardDescription() != null ? reward.getRewardDescription() : "" %></p>
+                    <div class="mt-2 flex space-x-4">
+                        <div class="text-sm text-gray-500">คะแนนที่ต้องใช้: <span class="font-medium text-gray-700"><%= reward.getPointsRequired() %></span></div>
+                        <div class="text-sm text-gray-500">คงเหลือ: <span class="font-medium text-gray-700"><%= reward.getRemaining() - 1 %>/<%= reward.getQuantity() %></span></div>
+                    </div>
                 </div>
-                
-                <% if (noMoreRewards != null && noMoreRewards) { %>
-                    <div class="p-8 bg-yellow-50 text-center rounded-lg mb-6">
-                        <div class="inline-block p-4 bg-yellow-100 rounded-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <% } %>
+            
+            <% if (noMoreRewards != null && noMoreRewards) { %>
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-yellow-800 mb-2">ไม่สามารถสุ่มรางวัลได้</h3>
-                        <p class="text-yellow-700 mb-4">รางวัลนี้หมดแล้ว ไม่สามารถสุ่มเพิ่มได้</p>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                รางวัลนี้หมดแล้ว ไม่สามารถสุ่มได้อีก
+                            </p>
+                        </div>
                     </div>
-                <% } else if (noEligibleParticipants != null && noEligibleParticipants) { %>
-                    <div class="p-8 bg-yellow-50 text-center rounded-lg mb-6">
-                        <div class="inline-block p-4 bg-yellow-100 rounded-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </div>
+            <% } else if (noEligibleParticipants != null && noEligibleParticipants) { %>
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-yellow-800 mb-2">ไม่มีผู้มีสิทธิ์ลุ้นรางวัล</h3>
-                        <p class="text-yellow-700 mb-4">ไม่พบผู้ที่มีคะแนนเพียงพอหรือมีสิทธิ์ในการลุ้นรางวัลนี้</p>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                ไม่พบผู้เข้าร่วมที่มีสิทธิ์รับรางวัลนี้ (อาจมีคะแนนไม่ถึงเกณฑ์ หรือไม่อยู่ในประเภทที่กำหนด)
+                            </p>
+                        </div>
                     </div>
-                <% } else if (success != null && success && winner != null) { %>
-                    <div class="text-center mb-8">
-                        <div class="inline-block p-4 bg-green-100 rounded-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
+                </div>
+            <% } else if (winner != null) { %>
+                <div class="bg-green-50 p-6 rounded-lg text-center mb-6">
+                    <h3 class="text-lg font-medium text-green-800 mb-4">ผู้โชคดีได้แก่</h3>
+                    <div class="bg-white rounded-lg border border-green-200 p-6 shadow-sm">
+                        <div class="text-3xl font-bold text-green-700 mb-2"><%= winner.getFullname() %></div>
+                        <div class="text-lg text-gray-600 mb-4">
+                            <% 
+                                String phone = winner.getPhoneNumber();
+                                String maskedPhone = phone.substring(0, phone.length() - 4).replaceAll("\\d", "x") + 
+                                                   phone.substring(phone.length() - 4);
+                            %>
+                            <%= maskedPhone %>
                         </div>
-                        <h3 class="text-2xl font-bold text-green-800 mb-4">ผู้โชคดีได้แก่</h3>
-                        <div class="max-w-md mx-auto bg-white p-6 rounded-lg border-2 border-green-500 shadow-lg">
-                            <p class="text-3xl font-bold text-green-700 mb-2"><%= winner.getFullname() %></p>
-                            <p class="text-gray-600">เบอร์โทรศัพท์: <%= winner.getPhoneNumber() %></p>
+                        <div class="flex justify-center">
+                            <div class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
+                                ผู้เข้าร่วมประเภท: <%= getVisitorTypeName(winner.getVisitorType()) %>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="flex justify-center space-x-4">
-                        <a href="${pageContext.request.contextPath}/lucky-draw" 
-                           class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                            กลับไปหน้าสุ่มรางวัล
-                        </a>
+                    <div class="mt-6">
+                        <div class="text-sm text-gray-500 mb-2">สถานะการบันทึกผล:</div>
+                        <% if (success != null && success) { %>
+                            <div class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full inline-block">
+                                บันทึกข้อมูลเรียบร้อยแล้ว
+                            </div>
+                        <% } else { %>
+                            <div class="bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full inline-block">
+                                เกิดข้อผิดพลาดในการบันทึกข้อมูล
+                            </div>
+                        <% } %>
                     </div>
-                <% } else { %>
-                    <div class="p-8 bg-red-50 text-center rounded-lg mb-6">
-                        <div class="inline-block p-4 bg-red-100 rounded-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </div>
+                
+                <div class="flex justify-center mt-8">
+                    <a href="<%=request.getContextPath()%>/lucky-draw" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">
+                        กลับไปหน้าสุ่มรางวัล
+                    </a>
+                    <button onclick="markAsReceived(<%= reward.getRewardId() %>, <%= winner.getVisitorId() %>)" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                        บันทึกว่าได้รับรางวัลแล้ว
+                    </button>
+                </div>
+            <% } else { %>
+                <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-red-800 mb-2">เกิดข้อผิดพลาด</h3>
-                        <p class="text-red-700 mb-4">ไม่สามารถสุ่มรางวัลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง</p>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                เกิดข้อผิดพลาดในการสุ่มรางวัล กรุณาลองใหม่อีกครั้ง
+                            </p>
+                        </div>
                     </div>
-                <% } %>
-            <% } else { %>
-                <div class="p-8 bg-red-50 text-center rounded-lg mb-6">
-                    <div class="inline-block p-4 bg-red-100 rounded-full mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-red-800 mb-2">ไม่พบรางวัล</h3>
-                    <p class="text-red-700 mb-4">ไม่พบข้อมูลรางวัลที่ต้องการสุ่ม กรุณาลองใหม่อีกครั้ง</p>
                 </div>
             <% } %>
         </div>
     </div>
+    
+    <script>
+        function markAsReceived(rewardId, visitorId) {
+            Swal.fire({
+                title: 'ยืนยันการรับรางวัล',
+                text: 'คุณต้องการบันทึกว่าผู้โชคดีได้รับรางวัลแล้วใช่หรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, บันทึกการรับรางวัล',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#6B7280'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ส่งข้อมูลไปยัง API เพื่อบันทึกการรับรางวัล
+                    fetch('<%=request.getContextPath()%>/api/mark-reward-received', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `rewardId=${rewardId}&visitorId=${visitorId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'สำเร็จ!',
+                                'บันทึกการรับรางวัลเรียบร้อยแล้ว',
+                                'success'
+                            ).then(() => {
+                                window.location.href = '<%=request.getContextPath()%>/lucky-draw';
+                            });
+                        } else {
+                            Swal.fire(
+                                'เกิดข้อผิดพลาด',
+                                data.message || 'ไม่สามารถบันทึกการรับรางวัลได้',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error marking reward as received:', error);
+                        Swal.fire(
+                            'เกิดข้อผิดพลาด',
+                            'ไม่สามารถบันทึกการรับรางวัลได้ กรุณาลองใหม่อีกครั้ง',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+    </script>
+    
+    <%!
+        // Helper method to get visitor type name
+        private String getVisitorTypeName(String visitorType) {
+            switch (visitorType) {
+                case "1": return "นักเรียน/นักศึกษา (ทั่วไป)";
+                case "2": return "นักเรียน/นักศึกษา (ผู้กู้ยืม กยศ.)";
+                case "3": return "บุคคลทั่วไป";
+                case "4": return "อาจารย์/บุคลากรทางการศึกษา";
+                case "5": return "องค์กรนายจ้าง";
+                case "6": return "ผู้บริหาร";
+                default: return "ไม่ระบุ";
+            }
+        }
+    %>
 </body>
 </html>

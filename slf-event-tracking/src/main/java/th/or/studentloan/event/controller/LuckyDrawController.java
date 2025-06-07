@@ -26,6 +26,58 @@ public class LuckyDrawController extends AbstractController {
     // เก็บข้อมูลผู้โชคดีล่าสุดสำหรับแต่ละรางวัล
     private Map<Long, Visitor> latestWinners = new HashMap<>();
     
+    // เพิ่มตัวแปรใหม่เพื่อเก็บข้อมูลการสุ่มปัจจุบัน
+    private static CurrentDrawingInfo currentDrawing = null;
+    
+    // Inner class เพื่อเก็บข้อมูลการสุ่มปัจจุบัน
+    private static class CurrentDrawingInfo {
+        private Long rewardId;
+        private String rewardName;
+        private String rewardDescription;
+        private Integer pointsRequired;
+        private boolean isActive = false;
+        private Visitor winner = null;
+        
+        public CurrentDrawingInfo(Reward reward) {
+            this.rewardId = reward.getRewardId();
+            this.rewardName = reward.getRewardName();
+            this.rewardDescription = reward.getRewardDescription();
+            this.pointsRequired = reward.getPointsRequired();
+        }
+
+        public Long getRewardId() {
+            return rewardId;
+        }
+
+        public String getRewardName() {
+            return rewardName;
+        }
+
+        public String getRewardDescription() {
+            return rewardDescription;
+        }
+
+        public Integer getPointsRequired() {
+            return pointsRequired;
+        }
+
+        public boolean isActive() {
+            return isActive;
+        }
+
+        public void setActive(boolean isActive) {
+            this.isActive = isActive;
+        }
+
+        public Visitor getWinner() {
+            return winner;
+        }
+
+        public void setWinner(Visitor winner) {
+            this.winner = winner;
+        }
+    }
+    
     public void setRewardService(RewardService rewardService) {
         this.rewardService = rewardService;
     }
@@ -48,9 +100,42 @@ public class LuckyDrawController extends AbstractController {
             return handleStartDraw(request, response);
         } else if (path.equals("/api/get-winners")) {
             return handleGetWinners(request, response);
+        } else if (path.equals("/api/current-drawing")) {
+            return handleCurrentDrawing(request, response);
         }
         
         return new ModelAndView("redirect:/admin");
+    }
+
+    // เพิ่มเมธอดใหม่สำหรับดึงข้อมูลการสุ่มปัจจุบัน
+    private ModelAndView handleCurrentDrawing(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> result = new HashMap<>();
+        
+        if (currentDrawing != null) {
+            result.put("success", true);
+            result.put("isActive", currentDrawing.isActive());
+            result.put("rewardId", currentDrawing.getRewardId());
+            result.put("rewardName", currentDrawing.getRewardName());
+            result.put("rewardDescription", currentDrawing.getRewardDescription());
+            result.put("pointsRequired", currentDrawing.getPointsRequired());
+            
+            if (currentDrawing.getWinner() != null) {
+                Map<String, Object> winnerInfo = new HashMap<>();
+                winnerInfo.put("name", currentDrawing.getWinner().getFullname());
+                winnerInfo.put("phone", currentDrawing.getWinner().getPhoneNumber());
+                result.put("winner", winnerInfo);
+            }
+        } else {
+            result.put("success", false);
+            result.put("message", "No active drawing");
+        }
+        
+        response.getWriter().write(mapper.writeValueAsString(result));
+        return null;
     }
 
     // เพิ่มเมธอดใหม่สำหรับดึงรายชื่อผู้โชคดีทั้งหมด
@@ -140,12 +225,17 @@ public class LuckyDrawController extends AbstractController {
             return mv;
         }
         
+        // เตรียมข้อมูลการสุ่มปัจจุบัน
+        currentDrawing = new CurrentDrawingInfo(reward);
+        currentDrawing.setActive(true);
+        
         // สุ่มผู้โชคดี
         Visitor winner = rewardService.selectRandomWinner(rewardId, reward.getPointsRequired());
         
         // เก็บผู้โชคดีล่าสุดสำหรับรางวัลนี้
         if (winner != null) {
             latestWinners.put(rewardId, winner);
+            currentDrawing.setWinner(winner);
         }
         
         // ถ้าไม่มีผู้มีสิทธิ์ลุ้นรางวัล
@@ -154,6 +244,12 @@ public class LuckyDrawController extends AbstractController {
             ModelAndView mv = new ModelAndView("admin/lucky-draw-result");
             mv.addObject("reward", reward);
             mv.addObject("noEligibleParticipants", true);
+            
+            // อัพเดทสถานะ
+            if (currentDrawing != null) {
+                currentDrawing.setActive(false);
+            }
+            
             return mv;
         }
         
@@ -170,31 +266,24 @@ public class LuckyDrawController extends AbstractController {
     }
     
     private ModelAndView handleLuckyDrawDisplay(HttpServletRequest request) {
-        String rewardIdStr = request.getParameter("rewardId");
-        
-        if (rewardIdStr == null || rewardIdStr.isEmpty()) {
-            return new ModelAndView("redirect:/lucky-draw");
-        }
-        
-        Long rewardId = Long.parseLong(rewardIdStr);
-        Reward reward = rewardService.getRewardById(rewardId);
-        
-        if (reward == null) {
-            return new ModelAndView("redirect:/lucky-draw");
-        }
-        
-        // ดึงรายชื่อผู้โชคดีที่เคยถูกรางวัลนี้
-        List<RewardClaim> winners = rewardService.getWinnersByRewardId(rewardId);
-        
-        // แก้ไขเส้นทางไปยัง admin/lucky-draw-display
+        // ไม่จำเป็นต้องใช้ rewardId จาก parameter อีกต่อไป
         ModelAndView mv = new ModelAndView("admin/lucky-draw-display");
-        mv.addObject("reward", reward);
-        mv.addObject("winners", winners);
+        
+        // ส่งข้อมูลเริ่มต้นไปยัง view (ถ้ามี)
+        if (currentDrawing != null) {
+            Reward reward = rewardService.getRewardById(currentDrawing.getRewardId());
+            if (reward != null) {
+                mv.addObject("reward", reward);
+                
+                // ดึงรายชื่อผู้โชคดีที่เคยถูกรางวัลนี้
+                List<RewardClaim> winners = rewardService.getWinnersByRewardId(currentDrawing.getRewardId());
+                mv.addObject("winners", winners);
+            }
+        }
         
         return mv;
     }
     
-    // เพิ่มเมธอดใหม่สำหรับ API ดึงข้อมูลผู้โชคดี
     private ModelAndView handleGetWinner(HttpServletRequest request, HttpServletResponse response) throws Exception {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -225,7 +314,6 @@ public class LuckyDrawController extends AbstractController {
         return null;
     }
     
-    // เพิ่มเมธอดใหม่สำหรับเริ่มการสุ่มจากหน้า admin
     private ModelAndView handleStartDraw(HttpServletRequest request, HttpServletResponse response) throws Exception {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -249,6 +337,10 @@ public class LuckyDrawController extends AbstractController {
             response.getWriter().write(mapper.writeValueAsString(result));
             return null;
         }
+        
+        // อัพเดทข้อมูลการสุ่มปัจจุบัน
+        currentDrawing = new CurrentDrawingInfo(reward);
+        currentDrawing.setActive(true);
         
         // ส่งข้อมูลว่าเริ่มสุ่มแล้ว
         result.put("success", true);
