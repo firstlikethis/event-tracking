@@ -344,15 +344,40 @@ public class AdminController extends AbstractController {
             return mv;
         }
         
-        Integer pointsRequired = Integer.parseInt(pointsRequiredStr);
-        Integer quantity = Integer.parseInt(quantityStr);
-        Integer remaining = remainingStr != null && !remainingStr.isEmpty() ? Integer.parseInt(remainingStr) : quantity;
+        Integer pointsRequired;
+        Integer quantity;
+        Integer remaining;
+        
+        try {
+            pointsRequired = Integer.parseInt(pointsRequiredStr);
+            quantity = Integer.parseInt(quantityStr);
+            
+            // ถ้าไม่ได้ระบุค่า remaining ให้ใช้ค่าเดียวกับ quantity
+            if (remainingStr != null && !remainingStr.isEmpty()) {
+                remaining = Integer.parseInt(remainingStr);
+            } else {
+                remaining = quantity;
+            }
+        } catch (NumberFormatException e) {
+            ModelAndView mv = new ModelAndView("admin/reward-form");
+            mv.addObject("error", "กรุณากรอกข้อมูลตัวเลขให้ถูกต้อง");
+            return mv;
+        }
         
         Reward reward = new Reward();
         
         if (rewardIdStr != null && !rewardIdStr.isEmpty()) {
-            Long rewardId = Long.parseLong(rewardIdStr);
-            reward = rewardService.getRewardById(rewardId);
+            try {
+                Long rewardId = Long.parseLong(rewardIdStr);
+                reward = rewardService.getRewardById(rewardId);
+                
+                // ถ้าไม่พบรางวัลให้สร้างใหม่
+                if (reward == null) {
+                    reward = new Reward();
+                }
+            } catch (NumberFormatException e) {
+                reward = new Reward(); // สร้างใหม่ถ้าแปลงค่าไม่ได้
+            }
         }
         
         reward.setRewardName(rewardName);
@@ -363,13 +388,20 @@ public class AdminController extends AbstractController {
         reward.setRemaining(remaining);
         reward.setIsActive(isActive != null ? "1" : "0");
         
-        if (reward.getRewardId() == null) {
-            rewardService.createReward(reward);
-        } else {
-            rewardService.updateReward(reward);
+        try {
+            if (reward.getRewardId() == null) {
+                rewardService.createReward(reward);
+            } else {
+                rewardService.updateReward(reward);
+            }
+            return new ModelAndView("redirect:/admin/rewards");
+        } catch (Exception e) {
+            e.printStackTrace();
+            ModelAndView mv = new ModelAndView("admin/reward-form");
+            mv.addObject("error", "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + e.getMessage());
+            mv.addObject("reward", reward); // ส่งข้อมูลเดิมกลับไปเพื่อให้ผู้ใช้แก้ไข
+            return mv;
         }
-        
-        return new ModelAndView("redirect:/admin/rewards");
     }
     
     private ModelAndView handleDeleteReward(HttpServletRequest request) {
